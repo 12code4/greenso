@@ -31,7 +31,16 @@ Read in order — each builds on the last:
 
 ## Status
 
-**Concept → planning complete.** No code yet. Next step: PM review of open decisions ([`docs/05-roadmap.md`](docs/05-roadmap.md#open-pm-decisions)), then M0 greybox.
+**M0 greybox in progress — playable.** Third-person controller, spring camera with aim mode, rifle + cap pistol hitscan with soft aim assist, pop-up target range, and a bedroom-floor-corner arena at honest 1:32 scale. Open PM decisions still pending in [`docs/05-roadmap.md`](docs/05-roadmap.md#open-pm-decisions).
+
+### Run it
+
+```bash
+npm install
+npm run dev      # → http://127.0.0.1:5173
+```
+
+`npm run build` typechecks and bundles to `dist/`. `node tools/smoke.mjs <shot-dir>` drives a headless smoke test (movement, jump, firing, scoring) against `npm run preview` on port 4173 and saves screenshots — pass `?test` in the URL for the same hooks in a live browser.
 
 ## Studio context
 
