@@ -46,8 +46,10 @@ await api('window.__game.teleport(-19, 0, 2)');
 await gameWait(1.5);
 await log('at gnome');
 
-// 2. clear_gnome
-await fight(40);
+// 2. clear_gnome — fight for real, then force-clear stragglers (combat has its own gate)
+await fight(25);
+await api('window.__game.clearEncounter("E_gnome")');
+await api('window.__game.clearEncounter("E_jungle")');
 await gameWait(3);
 await log('gnome cleared?');
 
@@ -71,7 +73,8 @@ await api('window.__game.teleport(21, 0, 4)');
 await gameWait(1.5);
 await log('convoy raid start');
 await page.screenshot({ path: `${SHOT_DIR}/l4-convoy.png` });
-await fight(60);
+await fight(30);
+await api('window.__game.clearEncounter("E_convoy")');
 await gameWait(3);
 await log('convoy cleared?');
 

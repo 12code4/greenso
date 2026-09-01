@@ -20,7 +20,7 @@ Campaign order is fiction; **build order** (bible, re-affirmed post-audit): Back
 | # | Map | File | Blueprint status |
 |---|---|---|---|
 | 1 | The Sandbox | `map-01-sandbox.md` | ready for P1 |
-| 2 | The Backyard | `map-02-backyard.md` | ready for P1 — **M2 slice** |
+| 2 | The Backyard | `map-02-backyard.md` | **built** — `src/maps/defs/backyard.ts`; P1 (`tools/walk.mjs`) + P2/P3 (`tools/combat.mjs`, `tools/mission.mjs`) gated headless; P4 dressing partial; P6 awaits a human — **M2 slice** |
 | 3 | The Gutter Run | `map-03-gutter.md` | ready for P1 (water ops gated on M3 spike) |
 | 4 | The Kitchen Counter | `map-04-kitchen.md` | ready for P1 |
 | 5 | The Bathroom | `map-05-bathroom.md` | ready for P1 (waterLevel gated on M3 spike) |

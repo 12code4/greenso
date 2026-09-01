@@ -209,6 +209,10 @@ if (TEST_MODE) {
     },
     teleport: (x: number, y: number, z: number) => { player.pos.set(x, y, z); player.vel.set(0, 0, 0); },
     activate: (id: string) => director.activate(id),
+    // Flow tests: force-clear an encounter (combat is gated separately)
+    clearEncounter: (id: string) => {
+      for (const e of enemies.list) if (e.alive && e.encounter === id) enemies.damage(e, 9999, new THREE.Vector3(0, 0, 1));
+    },
     walkTo: (x: number, y: number, z: number) => autopilot.walkTo(new THREE.Vector3(x, y, z)),
     walkArrived: () => autopilot.arrived,
     walkStop: () => autopilot.stop(input),
