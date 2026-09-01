@@ -88,6 +88,9 @@ export class Autopilot {
   private stuckT = 0;
   private lastPos = new THREE.Vector3();
   private jumpCooldown = 0;
+  /** Hold Space for this many GAME seconds (a wall-clock timer would release
+   *  before the next frame in a slow headless browser and cut the jump). */
+  private jumpHold = 0;
 
   walkTo(p: THREE.Vector3): void {
     this.target = p.clone();
@@ -99,6 +102,8 @@ export class Autopilot {
     this.target = null;
     input.injectKey('KeyW', false);
     input.injectKey('ShiftLeft', false);
+    input.injectKey('Space', false);
+    this.jumpHold = 0;
   }
 
   update(dt: number, input: Input, cam: ThirdPersonCamera, player: Player): void {
@@ -121,11 +126,15 @@ export class Autopilot {
     this.stuckT = moved < 0.4 * dt * 4 ? this.stuckT + dt : 0;
     this.lastPos.copy(player.pos);
     this.jumpCooldown -= dt;
+    if (this.jumpHold > 0) {
+      this.jumpHold -= dt;
+      if (this.jumpHold <= 0) input.injectKey('Space', false);
+    }
     const wantJump = (dy > 0.3 && horiz < 2.6) || this.stuckT > 0.35;
-    if (wantJump && this.jumpCooldown <= 0 && player.grounded) {
+    if (wantJump && this.jumpCooldown <= 0 && player.grounded && this.jumpHold <= 0) {
       input.injectKey('Space', true);
-      setTimeout(() => input.injectKey('Space', false), 120);
-      this.jumpCooldown = 0.7;
+      this.jumpHold = 0.35;
+      this.jumpCooldown = 0.8;
       this.stuckT = 0;
     }
   }
