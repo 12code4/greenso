@@ -208,6 +208,7 @@ if (TEST_MODE) {
       return true;
     },
     teleport: (x: number, y: number, z: number) => { player.pos.set(x, y, z); player.vel.set(0, 0, 0); },
+    heal: () => player.heal(100),
     activate: (id: string) => director.activate(id),
     // Flow tests: force-clear an encounter (combat is gated separately)
     clearEncounter: (id: string) => {
@@ -280,6 +281,7 @@ function frame(): void {
       weapons.update(dt, input, cam, aiming, hittables);
     } else if (!player.alive && player.updateDead(dt)) {
       player.respawnAt(map.regions.checkpoint);
+      map.platforms.resetArmed();
       hud.setMelt(1);
     }
 

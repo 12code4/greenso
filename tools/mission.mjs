@@ -20,7 +20,7 @@ const gameWait = async (seconds) => {
 };
 const log = async (label) => {
   const s = await state();
-  console.log(`${label}: objective=${s.objective} region=${s.region} enemies=${s.enemies} kills=${s.kills} hp=${s.hp.toFixed(0)} deaths=${s.deaths} marbles=${s.marbles} planes=${s.planes} complete=${s.complete}`);
+  console.log(`${label}: objective=${s.objective} region=${s.region} pos=[${s.pos.map((v) => v.toFixed(1)).join(',')}] enemies=${s.enemies} kills=${s.kills} hp=${s.hp.toFixed(0)} deaths=${s.deaths} marbles=${s.marbles} planes=${s.planes} complete=${s.complete}`);
   return s;
 };
 // Fight until no enemies remain or time runs out
@@ -78,7 +78,8 @@ await api('window.__game.clearEncounter("E_convoy")');
 await gameWait(3);
 await log('convoy cleared?');
 
-// 6. escape_leaf: stand on the leaf at the tear; it starts moving when the objective begins
+// 6. escape_leaf: the leaf waits at the tear, armed; it departs when boarded
+await api('window.__game.heal()');
 await api('window.__game.teleport(15, 0.3, -17)');
 await gameWait(1);
 await log('on leaf');

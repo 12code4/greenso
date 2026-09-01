@@ -22,7 +22,9 @@ class MovingPlatform {
   pts: THREE.Vector3[];
   length: number;
   t = 0;
+  /** Moving. Objective-started platforms become `armed` first and depart when boarded. */
   active: boolean;
+  armed = false;
   done = false;
   pos = new THREE.Vector3();
   private prev = new THREE.Vector3();
@@ -84,6 +86,17 @@ class MovingPlatform {
       Math.abs(r.pos.y - this.top) < 0.2
     );
   }
+
+  /** Back to the start, waiting to be boarded again (rider died mid-ride). */
+  reset(): void {
+    this.t = 0;
+    this.done = false;
+    this.active = false;
+    this.armed = true;
+    splinePoint(this.pts, 0, this.pos);
+    this.mesh.rotation.set(0, 0, 0);
+    this.place();
+  }
 }
 
 export class PlatformSystem {
@@ -101,15 +114,21 @@ export class PlatformSystem {
     return this.platforms.find((p) => p.def.id === id);
   }
 
-  /** Start any platforms waiting on this objective id. */
+  /** Arm any platforms waiting on this objective id: they depart when boarded. */
   onObjective(id: string): void {
-    for (const p of this.platforms) if (p.def.startOn === id) p.active = true;
+    for (const p of this.platforms) if (p.def.startOn === id) p.armed = true;
+  }
+
+  /** A rider died: unfinished objective platforms return to their start. */
+  resetArmed(): void {
+    for (const p of this.platforms) if (p.def.startOn && !p.done) p.reset();
   }
 
   /** Move platforms; carry riders standing on them. */
   update(dt: number, riders: Rider[]): void {
     for (const p of this.platforms) {
       const carried = riders.filter((r) => p.carries(r));
+      if (p.armed && !p.active && carried.length > 0) p.active = true;
       p.step(dt, this.delta);
       for (const r of carried) r.pos.add(this.delta);
     }
