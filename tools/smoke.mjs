@@ -11,7 +11,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on('console', (m) => console.log('[console]', m.type(), m.text()));
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 
-await page.goto('http://127.0.0.1:4173/?test', { waitUntil: 'networkidle' });
+await page.goto('http://127.0.0.1:4173/?test&map=kittest', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 
 const api = (expr) => page.evaluate(expr);

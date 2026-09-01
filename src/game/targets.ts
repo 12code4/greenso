@@ -188,13 +188,23 @@ export class TargetRange {
     origin: THREE.Vector3,
     dir: THREE.Vector3,
     maxT: number,
-  ): { point: THREE.Vector3; target: RangeTarget } | null {
+  ): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3) => boolean } | null {
     this.raycaster.set(origin, dir);
     this.raycaster.far = maxT;
     const hits = this.raycaster.intersectObjects(this.allHitMeshes, false);
     for (const h of hits) {
       const target = h.object.userData.target as RangeTarget;
-      if (target.isUp) return { point: h.point, target };
+      if (target.isUp) {
+        return {
+          point: h.point,
+          t: h.distance,
+          apply: (damage, d) => {
+            const killed = target.hit(damage, d);
+            if (killed) this.downed++;
+            return killed;
+          },
+        };
+      }
     }
     return null;
   }

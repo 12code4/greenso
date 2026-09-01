@@ -20,6 +20,8 @@ Scope: **The Backyard, complete** — built to its blueprint ([`docs/blueprints/
 
 > The level-build system (docs 06 + 07 + all 8 blueprints) is written ahead of M2 so that building each map is transcribe-and-tune, not design. M2 proves the pipeline on one map; M3–M4 run every other map through the same gates.
 
+**Status (2026-09-01): built.** The Backyard plays start to finish against its blueprint; the map runtime, kit registry, hazard scheduler, encounter director, mission FSM, POWs, aircraft, audio v1, and the `tools/` gates all exist. M1's essentials (melt meter, Tan roster, grenades, pose-snap in embryo) were folded in because the slice can't exist without enemies. **Not yet passed: the exit test itself** — a stranger playing hint-free to completion with the childhood-recognition reaction. That needs a human with a mouse; everything a headless browser can verify (reachability, camera sweep, combat loop, objective chain) is scripted in `tools/`. Known tuning debt: enemy accuracy/damage was tuned once against a stationary bot; real-GPU perf unmeasured; M1's full pose library and plastic-material detail texture remain M1 work proper.
+
 **Exit test:** a stranger plays the slice unprompted-hint-free to completion and the childhood-recognition reaction (vision doc success #1) actually happens. **This is the studio go/no-go gate for the remaining six maps.** A great slice that fails here is still real studio output (charter) — but the campaign doesn't proceed on hope.
 
 ## M3 — "Open the House" · systems complete

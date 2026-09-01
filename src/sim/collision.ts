@@ -93,9 +93,11 @@ export class CollisionWorld {
         const distSq = dx * dx + dy * dy + dz * dz;
         if (distSq >= radius * radius) continue;
 
-        // Step-up: low lip while grounded → stand on top of it
+        // Step-up: low lip while grounded → stand on top of it. Airborne, a
+        // slightly smaller lip still mounts (the "vault low lips" feel — a
+        // jump that reaches a ledge's shoulder lands on it instead of scraping).
         const lip = b.max.y - pos.y;
-        if (wasGrounded && lip > 0 && lip <= stepHeight) {
+        if (lip > 0 && lip <= (wasGrounded ? stepHeight : stepHeight * 0.85)) {
           pos.y = b.max.y;
           res.grounded = true;
           any = true;

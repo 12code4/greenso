@@ -25,6 +25,11 @@ export class ThirdPersonCamera {
   private recoil = 0;
   private recoilVel = 0;
   private shoulderT = 0; // 0 = hip framing, 1 = aim framing
+  private trauma = 0; // 0..1 shake energy (quakes, hits)
+  /** Fraction of recent frames the boom was pulled in hard (camera QA gate). */
+  boomPulledFrac = 0;
+  /** Aim-mode FOV; weapons set this (sniper zooms tighter). */
+  aimFov = FOV_AIM;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(FOV_NORMAL, aspect, 0.03, 400);
@@ -32,6 +37,10 @@ export class ThirdPersonCamera {
 
   addRecoil(amount: number): void {
     this.recoilVel += amount;
+  }
+
+  addTrauma(amount: number): void {
+    this.trauma = Math.min(1, this.trauma + amount);
   }
 
   update(
@@ -102,8 +111,18 @@ export class ThirdPersonCamera {
     this.camera.position.copy(anchor).addScaledVector(back, this.boom);
     this.camera.lookAt(anchor.clone().addScaledVector(dir, 2));
 
+    // Trauma shake: squared falloff, decays fast
+    if (this.trauma > 0) {
+      const s = this.trauma * this.trauma;
+      this.camera.position.x += (Math.random() - 0.5) * 0.12 * s;
+      this.camera.position.y += (Math.random() - 0.5) * 0.12 * s;
+      this.camera.rotation.z += (Math.random() - 0.5) * 0.035 * s;
+      this.trauma = Math.max(0, this.trauma - dt * 1.8);
+    }
+    this.boomPulledFrac += ((this.boom < 1.0 ? 1 : 0) - this.boomPulledFrac) * (1 - Math.exp(-0.5 * dt));
+
     // --- FOV ---
-    const wantFov = (aiming ? FOV_AIM : FOV_NORMAL) + (sprinting ? FOV_SPRINT_ADD : 0);
+    const wantFov = (aiming ? this.aimFov : FOV_NORMAL) + (sprinting ? FOV_SPRINT_ADD : 0);
     this.camera.fov += (wantFov - this.camera.fov) * (1 - Math.exp(-10 * dt));
     this.camera.updateProjectionMatrix();
   }

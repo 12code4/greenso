@@ -1,32 +1,80 @@
-// DOM overlay HUD: crosshair, score, weapon, frame-time graph,
-// click-to-deploy overlay, help panel.
+// DOM overlay HUD: crosshair, melt meter, weapon/ammo, objective line, radio
+// (Lt. Olive), interact prompt, marbles, damage vignette, briefing + tally
+// overlays, frame-time graph, help panel, toasts.
+
+export interface TallyData {
+  title: string;
+  timeSeconds: number;
+  parSeconds: number;
+  marbles: number;
+  marblesTotal: number;
+  powsFreed: number;
+  accuracy: number;
+  deaths: number;
+}
 
 export class Hud {
   private crosshair: HTMLDivElement;
   private weaponEl: HTMLDivElement;
-  private scoreEl: HTMLDivElement;
+  private meltFill: HTMLDivElement;
+  private meltWrap: HTMLDivElement;
+  private marblesEl: HTMLDivElement;
+  private statsEl: HTMLDivElement;
+  private objectiveEl: HTMLDivElement;
+  private radioEl: HTMLDivElement;
+  private radioName: HTMLDivElement;
+  private radioText: HTMLDivElement;
+  private promptEl: HTMLDivElement;
+  private promptText: HTMLDivElement;
+  private promptFill: HTMLDivElement;
+  private vignette: HTMLDivElement;
+  private overlay: HTMLDivElement;
+  private overlayBody: HTMLDivElement;
+  private tally: HTMLDivElement;
+  private toastEl: HTMLDivElement;
   private perfCanvas: HTMLCanvasElement;
   private perfText: HTMLDivElement;
-  private overlay: HTMLDivElement;
   private help: HTMLDivElement;
   private frameTimes: number[] = [];
   private perfAccum = 0;
+  private radioTimer = 0;
+  private radioFull = '';
+  private radioShown = 0;
+  private toastTimer = 0;
+  private critical = false;
 
   constructor(parent: HTMLElement) {
     const style = document.createElement('style');
     style.textContent = CSS;
     document.head.appendChild(style);
 
-    const root = document.createElement('div');
-    root.className = 'hud';
-    parent.appendChild(root);
+    const root = el('div', 'hud', parent);
+
+    this.vignette = el('div', 'vignette', root);
 
     this.crosshair = el('div', 'crosshair', root);
     this.crosshair.innerHTML = '<div class="dot"></div><div class="ring"></div>';
 
     const topLeft = el('div', 'top-left', root);
     this.weaponEl = el('div', 'weapon', topLeft);
-    this.scoreEl = el('div', 'score', topLeft);
+    this.meltWrap = el('div', 'melt', topLeft);
+    this.meltWrap.innerHTML = '<span class="lbl">MELT</span><div class="bar"><div class="fill"></div></div>';
+    this.meltFill = this.meltWrap.querySelector('.fill') as HTMLDivElement;
+    this.marblesEl = el('div', 'marbles', topLeft);
+    this.statsEl = el('div', 'stats', topLeft);
+
+    this.objectiveEl = el('div', 'objective', root);
+
+    this.radioEl = el('div', 'radio', root);
+    this.radioName = el('div', 'radio-name', this.radioEl);
+    this.radioText = el('div', 'radio-text', this.radioEl);
+    this.radioEl.style.display = 'none';
+
+    this.promptEl = el('div', 'prompt', root);
+    this.promptText = el('div', 'prompt-text', this.promptEl);
+    const pbar = el('div', 'prompt-bar', this.promptEl);
+    this.promptFill = el('div', 'prompt-fill', pbar);
+    this.promptEl.style.display = 'none';
 
     const topRight = el('div', 'top-right', root);
     this.perfCanvas = document.createElement('canvas');
@@ -35,52 +83,146 @@ export class Hud {
     topRight.appendChild(this.perfCanvas);
     this.perfText = el('div', 'perf-text', topRight);
 
-    const hint = el('div', 'hint', root);
-    hint.textContent = 'H — controls';
-
+    el('div', 'hint', root).textContent = 'H — controls';
     this.help = el('div', 'help', root);
     this.help.innerHTML =
-      '<b>PLASTIC PLATOON — M0 GREYBOX</b><br><br>' +
-      'WASD move · Shift sprint · Space jump/vault<br>' +
+      '<b>PLASTIC PLATOON</b><br><br>' +
+      'WASD move · Shift sprint · Space jump<br>' +
       'Mouse look · LMB fire · RMB aim<br>' +
-      'C crouch · C during sprint: dive<br>' +
-      '1/2 or Q — rifle / cap pistol<br>' +
-      'H — toggle this panel · Esc — release mouse';
+      'C crouch · C while sprinting: dive<br>' +
+      'G grenade (hold to cook) · E interact<br>' +
+      '1 rifle · 2 cap pistol · 3 rubber-band sniper · Q cycle<br>' +
+      'F8 free-cam · P log position · F9 regions<br>' +
+      'H toggle this · Esc release mouse';
     this.help.style.display = 'none';
 
+    this.toastEl = el('div', 'toast', root);
+    this.toastEl.style.display = 'none';
+
     this.overlay = el('div', 'overlay', root);
-    this.overlay.innerHTML =
-      '<div class="title">PLASTIC PLATOON</div>' +
-      '<div class="sub">M0 greybox — the firing range</div>' +
-      '<div class="deploy">CLICK TO DEPLOY</div>' +
-      '<div class="controls">WASD + mouse · Shift sprint · Space jump · RMB aim · LMB fire</div>';
+    this.overlayBody = el('div', 'overlay-body', this.overlay);
+    this.setBriefing('PLASTIC PLATOON', '', []);
+
+    this.tally = el('div', 'tally', root);
+    this.tally.style.display = 'none';
   }
+
+  // ------------------------------------------------------------ overlays
 
   setOverlay(visible: boolean): void {
     this.overlay.style.display = visible ? 'flex' : 'none';
+  }
+
+  setBriefing(title: string, subtitle: string, lines: string[]): void {
+    this.overlayBody.innerHTML =
+      `<div class="title">${title}</div>` +
+      (subtitle ? `<div class="sub">${subtitle}</div>` : '') +
+      (lines.length ? `<div class="brief">${lines.map((l) => `<div>${l}</div>`).join('')}</div>` : '') +
+      '<div class="deploy">CLICK TO DEPLOY</div>' +
+      '<div class="controls">WASD + mouse · Shift sprint · Space jump · RMB aim · LMB fire · G grenade · E interact</div>';
+  }
+
+  showTally(d: TallyData): void {
+    const medal = d.timeSeconds <= d.parSeconds * 1.15 ? 'GOLD' : d.timeSeconds <= d.parSeconds * 1.5 ? 'SILVER' : d.timeSeconds <= d.parSeconds * 2.2 ? 'BRONZE' : 'MESS KIT';
+    this.tally.innerHTML =
+      `<div class="title">MISSION COMPLETE</div><div class="sub">${d.title}</div>` +
+      `<div class="medal ${medal.toLowerCase().replace(' ', '')}">${medal}</div>` +
+      '<table>' +
+      `<tr><td>Time</td><td>${fmt(d.timeSeconds)} <span class="dim">(par ${fmt(d.parSeconds)})</span></td></tr>` +
+      `<tr><td>Lost Marbles</td><td>${d.marbles} / ${d.marblesTotal}</td></tr>` +
+      `<tr><td>POWs freed</td><td>${d.powsFreed}</td></tr>` +
+      `<tr><td>Accuracy</td><td>${Math.round(d.accuracy * 100)}%</td></tr>` +
+      `<tr><td>Replacements requisitioned</td><td>${d.deaths}</td></tr>` +
+      '</table>' +
+      '<div class="again">R — back to the toy bin</div>';
+    this.tally.style.display = 'flex';
+  }
+
+  hideTally(): void {
+    this.tally.style.display = 'none';
   }
 
   toggleHelp(): void {
     this.help.style.display = this.help.style.display === 'none' ? 'block' : 'none';
   }
 
+  toast(text: string, seconds = 2.5): void {
+    this.toastEl.textContent = text;
+    this.toastEl.style.display = 'block';
+    this.toastTimer = seconds;
+  }
+
+  // ------------------------------------------------------------ live elements
+
   setAiming(aiming: boolean): void {
     this.crosshair.classList.toggle('aiming', aiming);
   }
 
-  setWeapon(name: string): void {
-    this.weaponEl.textContent = `${name} · AMMO ∞`;
+  setWeapon(name: string, ammo: string): void {
+    this.weaponEl.textContent = `${name} · ${ammo}`;
   }
 
-  setScore(downed: number, hits: number, shots: number): void {
-    const acc = shots > 0 ? Math.round((hits / shots) * 100) : 0;
-    this.scoreEl.textContent = `TARGETS DOWN ${downed} · ACCURACY ${acc}%`;
+  setMelt(frac: number): void {
+    const f = Math.max(0, Math.min(1, frac));
+    this.meltFill.style.width = `${f * 100}%`;
+    this.meltFill.style.background = f > 0.6 ? '#8bc46a' : f > 0.25 ? '#e0b04a' : '#e06a4a';
+    this.critical = f <= 0.25;
+    this.vignette.classList.toggle('critical', this.critical);
+  }
+
+  setMarbles(found: number, total: number): void {
+    this.marblesEl.textContent = total > 0 ? `LOST MARBLES ${found} / ${total}` : '';
+  }
+
+  setStats(text: string): void {
+    this.statsEl.textContent = text;
+  }
+
+  setObjective(text: string): void {
+    this.objectiveEl.textContent = text ? `▸ ${text}` : '';
+  }
+
+  radio(speaker: string, text: string, seconds = 6): void {
+    this.radioName.textContent = speaker;
+    this.radioFull = text;
+    this.radioShown = 0;
+    this.radioTimer = seconds + text.length * 0.02;
+    this.radioEl.style.display = 'block';
+  }
+
+  setPrompt(text: string | null, progress = 0): void {
+    if (!text) {
+      this.promptEl.style.display = 'none';
+      return;
+    }
+    this.promptEl.style.display = 'block';
+    this.promptText.textContent = text;
+    this.promptFill.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
   }
 
   hitMarker(killed: boolean): void {
     this.crosshair.classList.remove('hit', 'kill');
-    void this.crosshair.offsetWidth; // restart animation
+    void this.crosshair.offsetWidth;
     this.crosshair.classList.add(killed ? 'kill' : 'hit');
+  }
+
+  damageFlash(): void {
+    this.vignette.classList.remove('flash');
+    void this.vignette.offsetWidth;
+    this.vignette.classList.add('flash');
+  }
+
+  update(dt: number): void {
+    if (this.radioTimer > 0) {
+      this.radioTimer -= dt;
+      this.radioShown = Math.min(this.radioFull.length, this.radioShown + dt * 55);
+      this.radioText.textContent = this.radioFull.slice(0, Math.floor(this.radioShown));
+      if (this.radioTimer <= 0) this.radioEl.style.display = 'none';
+    }
+    if (this.toastTimer > 0) {
+      this.toastTimer -= dt;
+      if (this.toastTimer <= 0) this.toastEl.style.display = 'none';
+    }
   }
 
   perf(dtMs: number): void {
@@ -101,11 +243,16 @@ export class Hud {
         g.fillStyle = t > 16.9 ? '#e06a4a' : '#8bc46a';
         g.fillRect(i * 2, 40 - h, 1.6, h);
       }
-      // 16.7ms budget line
       g.fillStyle = 'rgba(255,255,255,0.5)';
       g.fillRect(0, 40 - (16.7 / 33.3) * 38, 150, 1);
     }
   }
+}
+
+function fmt(s: number): string {
+  const m = Math.floor(s / 60);
+  const r = Math.floor(s % 60);
+  return `${m}:${r.toString().padStart(2, '0')}`;
 }
 
 function el(tag: string, cls: string, parent: HTMLElement): HTMLDivElement {
@@ -117,6 +264,11 @@ function el(tag: string, cls: string, parent: HTMLElement): HTMLDivElement {
 
 const CSS = `
 .hud { position: fixed; inset: 0; pointer-events: none; font-family: 'Courier New', monospace; color: #f2ead9; text-shadow: 0 1px 2px rgba(0,0,0,0.6); user-select: none; }
+.vignette { position: absolute; inset: 0; box-shadow: inset 0 0 120px rgba(220,60,30,0); transition: box-shadow 0.25s; }
+.vignette.flash { animation: dmg 0.45s; }
+.vignette.critical { animation: crit 1.6s infinite; }
+@keyframes dmg { 0% { box-shadow: inset 0 0 160px rgba(230,70,30,0.75); } 100% { box-shadow: inset 0 0 120px rgba(220,60,30,0); } }
+@keyframes crit { 0%,100% { box-shadow: inset 0 0 110px rgba(230,80,30,0.25); } 50% { box-shadow: inset 0 0 150px rgba(230,80,30,0.55); } }
 .crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .crosshair .dot { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #f2ead9; box-shadow: 0 0 3px rgba(0,0,0,0.8); }
 .crosshair .ring { position: absolute; left: -11px; top: -11px; width: 20px; height: 20px; border: 1.5px solid rgba(242,234,217,0.85); border-radius: 50%; opacity: 0; transition: opacity 0.12s; }
@@ -127,16 +279,38 @@ const CSS = `
 @keyframes killflash { 0% { transform: scale(3.4); background: #ff8c5a; } 100% { transform: scale(1); } }
 .top-left { position: absolute; left: 16px; top: 14px; font-size: 13px; letter-spacing: 1px; }
 .top-left .weapon { font-weight: bold; }
-.top-left .score { margin-top: 4px; opacity: 0.85; }
+.melt { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.melt .lbl { font-size: 11px; opacity: 0.8; }
+.melt .bar { width: 160px; height: 9px; background: rgba(0,0,0,0.45); border: 1px solid rgba(242,234,217,0.5); border-radius: 3px; overflow: hidden; }
+.melt .fill { height: 100%; width: 100%; background: #8bc46a; transition: width 0.15s, background 0.3s; }
+.marbles, .stats { margin-top: 5px; opacity: 0.85; font-size: 12px; }
+.objective { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: 2px; opacity: 0.92; background: rgba(20,16,10,0.45); padding: 6px 14px; border-radius: 4px; }
+.radio { position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%); width: min(640px, 80vw); background: rgba(20,16,10,0.72); border-left: 3px solid #a8d47a; padding: 10px 14px; border-radius: 4px; font-size: 14px; line-height: 1.45; }
+.radio-name { font-size: 11px; letter-spacing: 2px; opacity: 0.7; margin-bottom: 3px; }
+.prompt { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 14px; letter-spacing: 2px; }
+.prompt-bar { width: 180px; height: 6px; margin: 6px auto 0; background: rgba(0,0,0,0.5); border: 1px solid rgba(242,234,217,0.5); border-radius: 3px; overflow: hidden; }
+.prompt-fill { height: 100%; width: 0; background: #a8d47a; }
 .top-right { position: absolute; right: 16px; top: 14px; text-align: right; }
 .top-right canvas { border-radius: 3px; }
 .perf-text { font-size: 11px; margin-top: 3px; opacity: 0.85; }
 .hint { position: absolute; left: 16px; bottom: 12px; font-size: 11px; opacity: 0.6; }
 .help { position: absolute; left: 16px; bottom: 34px; font-size: 12px; line-height: 1.7; background: rgba(20,16,10,0.72); padding: 12px 16px; border-radius: 6px; }
-.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(24,19,11,0.55); backdrop-filter: blur(2px); }
+.toast { position: absolute; right: 16px; bottom: 16px; font-size: 12px; background: rgba(20,16,10,0.72); padding: 8px 12px; border-radius: 4px; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(24,19,11,0.6); backdrop-filter: blur(2px); }
+.overlay-body { display: flex; flex-direction: column; align-items: center; max-width: 720px; text-align: center; }
 .overlay .title { font-size: 44px; font-weight: bold; letter-spacing: 6px; color: #a8d47a; text-shadow: 0 2px 0 #3a5a28, 0 4px 12px rgba(0,0,0,0.5); }
 .overlay .sub { margin-top: 6px; font-size: 14px; letter-spacing: 3px; opacity: 0.85; }
-.overlay .deploy { margin-top: 42px; font-size: 18px; letter-spacing: 4px; animation: pulse 1.6s infinite; }
-.overlay .controls { margin-top: 18px; font-size: 12px; opacity: 0.7; }
+.overlay .brief { margin-top: 26px; font-size: 14px; line-height: 1.8; text-align: left; background: rgba(20,16,10,0.55); padding: 14px 20px; border-left: 3px solid #a8d47a; border-radius: 4px; }
+.overlay .deploy { margin-top: 34px; font-size: 18px; letter-spacing: 4px; animation: pulse 1.6s infinite; }
+.overlay .controls { margin-top: 16px; font-size: 12px; opacity: 0.7; }
 @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+.tally { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(24,19,11,0.7); backdrop-filter: blur(3px); }
+.tally .title { font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #a8d47a; }
+.tally .sub { margin-top: 4px; font-size: 14px; letter-spacing: 3px; opacity: 0.85; }
+.tally .medal { margin: 22px 0; font-size: 28px; letter-spacing: 6px; padding: 8px 26px; border: 2px solid; border-radius: 6px; }
+.tally .medal.gold { color: #ffd257; border-color: #ffd257; } .tally .medal.silver { color: #d9dde6; border-color: #d9dde6; } .tally .medal.bronze { color: #d9915a; border-color: #d9915a; } .tally .medal.messkit { color: #a9a9a9; border-color: #a9a9a9; }
+.tally table { font-size: 15px; border-spacing: 26px 8px; }
+.tally td:first-child { opacity: 0.75; text-align: right; }
+.tally .dim { opacity: 0.6; }
+.tally .again { margin-top: 26px; font-size: 13px; letter-spacing: 3px; opacity: 0.8; animation: pulse 1.6s infinite; }
 `;

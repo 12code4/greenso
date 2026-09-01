@@ -87,6 +87,15 @@ Active-combatant peak ≈ 8, under the 12 budget.
 
 `brief → reach_gnome → find_convoy(discover) → rescue_fern(interact/water) → raid_convoy(clear E_convoy) → escape_leaf(ride) → complete`. Checkpoints at each region entry; none mid-leaf-ride (ride restarts on death). **Par:** 100 u ÷ 3.2 + 5 pockets×30 s + 20 s ride ≈ **3:20**; Gold ≤ 3:50.
 
+## 8b. Build deltas (P1 transcription, `src/maps/defs/backyard.ts`)
+
+Recorded so the blueprint stays the contract:
+
+- **Tiers & the birdbath.** Blueprint had the rake as gnome→flowerbed and the birdbath climbed by stacked hops. At honest scale a 1.5 u tier is *one brick + auto-step*, so `RT_bricks` (single garden bricks) does gnome/jungle → tier 1 → tier 2, and the **rake leans against the birdbath from tier 1** (`RT_rake`, rise 8.3) as the overlook route — more kid-yard than a brick tower. `brick_garden` is the map's 8th new hero prop (budget exactly met).
+- **The hose** is a 0.3 u ridge (auto-step) plus a coil mound at the faucet, per the 06 audit — `RT_hose_top` as written ("hop onto hose 1.1") was pre-audit and is replaced by `RT_hose_gap` (the flank route west of the Gnome over the ridge).
+- **Fern's post** is the birdbath rim itself (she's glued there; freed, she stays as overwatch).
+- **Encounter `E_stream`** (three molded Tans on the stream bank) was added for the leaf-ride finale so the ride is under fire as designed; it activates with `escape_leaf`.
+
 ## 9. QA deltas
 
 - Grass perception + sprinkler-soak interaction is new tech → prove in P2/P3 with the timeline test before dressing.
