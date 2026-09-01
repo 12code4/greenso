@@ -28,6 +28,9 @@ Read in order — each builds on the last:
 | [`docs/03-map-bible.md`](docs/03-map-bible.md) | **The centerpiece.** Scale math, map design language, and the full 8-map campaign roster in detail |
 | [`docs/04-tech.md`](docs/04-tech.md) | Engine choice, architecture, the plastic material & pose-snap animation approach, physics, audio, performance budgets |
 | [`docs/05-roadmap.md`](docs/05-roadmap.md) | Milestones M0–M5 with exit criteria, risk register, scope guardrails, open PM decisions |
+| [`docs/06-level-architecture.md`](docs/06-level-architecture.md) | **The build system.** Canonical scale, spatial "building code", the `MapDef` data format, encounter/hazard systems, and the 7-pass build pipeline with acceptance gates |
+| [`docs/07-household-kit.md`](docs/07-household-kit.md) | The shared prop catalog — ~45 hero props with honest dimensions, colliders, and gameplay affordances; materials & registry contract |
+| [`docs/blueprints/`](docs/blueprints/) | One construction contract per campaign map (all 8): regions, routes, golden path, encounters, hazards, kit manifest, mission FSM, QA |
 
 ## Status
 

@@ -16,7 +16,9 @@ Scope: PlasticMaterial with all damage states · pose-snap animation system + Mo
 
 ## M2 — "The Green Sea" · vertical slice ★ the go/no-go milestone
 
-Scope: **The Backyard, complete** — full layout, sprinkler hazard schedule, landmark wayfinding, Fern rescue, convoy raid, leaf-ride finale, marbles · Blender→GLTF map pipeline + nav painter + encounter tuner proven end-to-end · Rubber-Band Sniper, Prone Sniper enemy, Balsa Interceptor · mission flow (briefing → play → medal tally) · HUD v1 · audio pass v1 (SFX bed + one music arrangement + Giants room tone) · hosted build on Pages, playable start-to-finish.
+Scope: **The Backyard, complete** — built to its blueprint ([`docs/blueprints/map-02-backyard.md`](blueprints/map-02-backyard.md)) through the P1–P6 pipeline ([`docs/06`](06-level-architecture.md)): full layout, sprinkler hazard schedule, landmark wayfinding, Fern rescue, convoy raid, leaf-ride finale, marbles · the map runtime the whole campaign reuses (kit registry + instancer, region/nav/encounter-director/hazard-scheduler/mission-FSM) proven here first · `tools/walk.mjs` reachability gate + authoring aids (free-cam, position logger, overlays) · the M0 arena rebuilt at canonical scale as the Household Kit test scene · Rubber-Band Sniper, Prone Sniper enemy, Balsa Interceptor · mission flow (briefing → play → medal tally) · HUD v1 · audio pass v1 (SFX bed + one music arrangement + Giants room tone) · hosted build on Pages, playable start-to-finish.
+
+> The level-build system (docs 06 + 07 + all 8 blueprints) is written ahead of M2 so that building each map is transcribe-and-tune, not design. M2 proves the pipeline on one map; M3–M4 run every other map through the same gates.
 
 **Exit test:** a stranger plays the slice unprompted-hint-free to completion and the childhood-recognition reaction (vision doc success #1) actually happens. **This is the studio go/no-go gate for the remaining six maps.** A great slice that fails here is still real studio output (charter) — but the campaign doesn't proceed on hope.
 

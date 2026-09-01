@@ -6,7 +6,9 @@
 
 Classic toy soldiers are **54 mm** — 1:32 scale. We adopt 1:32 exactly and never cheat it, because honest scale is what sells the fantasy. One in-engine unit = one soldier height.
 
-The conversion table below is the level designer's ruler. Memorize it; it turns any room in your own house into a draft map:
+> **⚠️ Scale note (2026-08-29):** This document is the *design* bible — its "reads as" column and some early region sizes are evocative human-scale framing, not engine numbers. The **authoritative build constant is `units = cm ÷ 5.4`** and the authoritative conversion table + region dimensions live in [`06-level-architecture.md`](06-level-architecture.md#1-canonical-scale-the-audit) and the per-map [`blueprints/`](blueprints/). Where this doc's numbers differ from 06 or a blueprint, **06 and the blueprints win** (they corrected an early ×32.4 vs ÷5.4 conflation and trimmed a few oversized footprints). Read this doc for the *what and why*; build from 06 + the blueprints.
+
+The conversion table below is the level designer's ruler for *imagining* a space; use the 06 table for building it:
 
 | Household thing | Real size | At soldier scale | Reads as |
 |---|---|---|---|
