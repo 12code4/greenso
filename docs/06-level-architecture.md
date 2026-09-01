@@ -175,7 +175,7 @@ Every map is built in the same seven passes. A pass is done when its gate passes
 | Pass | Work | Gate (acceptance) |
 |---|---|---|
 | **P0 Blueprint** | the doc in docs/blueprints/ | review vs. §8 checklist; region/route IDs frozen |
-| **P1 Shell & greybox** | shell + regions + props (kit placeholders) + routes transcribed | `tools/walk.mjs <map>`: scripted walkers traverse every route polyline (reachability CI); camera sweep along main routes logs boom < 1.0 u on < 8% of frames; real-footprint check |
+| **P1 Shell & greybox** | shell + regions + props (kit placeholders) + routes transcribed | `tools/walk.mjs <map>`: scripted walkers traverse every route polyline (reachability CI); camera sweep along main routes logs boom < 1.0 u on < 8% of frames; real-footprint check; **movePlatform corridors are deck-height-clear** (no collider lip within auto-step range of the deck along the path — a 0.32 u crate walks a rider off a leaf, found by the Backyard mission gate) |
 | **P2 Nav & encounters** | nav graph + encounter instances | AI pathing smoke: every nav link traversed by a spawned Trooper; templates activate and leash correctly |
 | **P3 Hazards & mission** | scheduler configs + objective FSM | deterministic-clock timeline test (phases fire in order); mission FSM unit test start→complete |
 | **P4 Dressing** | kit variants, dressing props, landmark polish — within the map's ≤8-new-heroes budget | perf flythrough ≤ budget (04-tech); law-7 scale-seller count per region ≥ 1; fortification ratio ≥ 50% in pockets |
