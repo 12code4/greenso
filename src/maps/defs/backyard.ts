@@ -11,14 +11,20 @@ const T1 = 1.5; // tier 1 top
 const T2 = 3.0; // tier 2 top
 const BIRD_RIM = T1 + 8.6; // birdbath stands on tier 1; walkable rim plateau top
 
-// The hose-stream the leaf rides: from the torn hose east and south along the fence
+// The hose-stream the leaf rides: from the torn hose east along the hose line,
+// across the road north of the waypoint, then south down the fence channel
+// (x ≈ 28.5, between the road at x=23 and the pickets at x=30.5). Nothing
+// taller than the leaf deck may sit in the channel — a 0.32 u crate lip is
+// enough for auto-step to walk the rider off the leaf.
 const STREAM: Vec3[] = [
   [15, 0.06, -17],
-  [19, 0.06, -13.5],
-  [25, 0.06, -8],
-  [28.2, 0.06, 0],
-  [28.4, 0.06, 10],
-  [28.0, 0.06, 20],
+  [19, 0.06, -19.5],
+  [24, 0.06, -22],
+  [28, 0.06, -18],
+  [28.6, 0.06, -8],
+  [28.4, 0.06, 2],
+  [28.2, 0.06, 12],
+  [28.0, 0.06, 22],
   [27.4, 0.06, 30],
   [26.0, 0.06, 38],
 ];
@@ -104,7 +110,7 @@ export const BACKYARD: MapDef = {
     { kit: 'hose_ridge', at: [-10, 0, -18] },
     { kit: 'hose_ridge', at: [-2, 0, -18] },
     { kit: 'hose_ridge', at: [6, 0, -18] },
-    { kit: 'hose_ridge', at: [12.5, 0, -17.6], yaw: -0.25 },
+    { kit: 'hose_ridge', at: [13, 0, -18] }, // the torn end; the stream starts just past it
     { kit: 'hose_coil', at: [-27, 0, -23] },
     { kit: 'faucet_yard', at: [-30.2, 0, -23] },
 
@@ -122,19 +128,19 @@ export const BACKYARD: MapDef = {
 
     // ----- Convoy road: hot-wheels track, toy cars, the Tan waypoint -----
     ...Array.from({ length: 11 }, (_, i) => ({ kit: 'track_hotwheels', at: [23, 0, -27.2 + i * 5.6] as Vec3, yaw: Math.PI / 2 })),
-    { kit: 'car_toy', at: [23, 0.1, -20], yaw: Math.PI / 2, variant: 0 },
+    { kit: 'car_toy', at: [23, 0.1, -25], yaw: Math.PI / 2, variant: 0 },
     { kit: 'car_toy', at: [23, 0.1, 14], yaw: Math.PI / 2 + 0.2, variant: 2 },
     { kit: 'box_juice', at: [19.5, 0, -7], yaw: 0.2 },
     { kit: 'box_juice', at: [20.8, 0, -7.2], yaw: 0.1, variant: 1 },
-    { kit: 'box_juice', at: [26.5, 0, -6.5], yaw: -0.2 },
-    { kit: 'box_juice', at: [27.6, 0, -6.2], yaw: -0.1, variant: 1 },
+    { kit: 'box_juice', at: [25.5, 0, -6.5], yaw: -0.2 },
+    { kit: 'box_juice', at: [26.6, 0, -6.2], yaw: -0.1, variant: 1 },
     { kit: 'barricade_popsicle', at: [23.5, 0, -1], yaw: 0.05 },
     { kit: 'batt_crate', at: [25.5, 0, -10], yaw: 0.3 },
     { kit: 'batt_crate', at: [20.5, 0, -11], yaw: -0.4 },
     { kit: 'batt_crate', at: [24.3, 0.1, -13], yaw: 0.9 },
     { kit: 'domino', at: [18.5, 0, 2], yaw: 0.2 },
     { kit: 'domino', at: [19.1, 0, 2.1], yaw: 0.2 },
-    { kit: 'domino', at: [27.5, 0, 3], yaw: -0.3 },
+    { kit: 'domino', at: [26.3, 0, 3], yaw: -0.3 },
 
     // ----- South lawn dressing -----
     { kit: 'can_soda', at: [-11, 0, 32], variant: 2 },

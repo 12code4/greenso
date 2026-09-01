@@ -95,6 +95,8 @@ Recorded so the blueprint stays the contract:
 - **The hose** is a 0.3 u ridge (auto-step) plus a coil mound at the faucet, per the 06 audit — `RT_hose_top` as written ("hop onto hose 1.1") was pre-audit and is replaced by `RT_hose_gap` (the flank route west of the Gnome over the ridge).
 - **Fern's post** is the birdbath rim itself (she's glued there; freed, she stays as overwatch).
 - **Encounter `E_stream`** (three molded Tans on the stream bank) was added for the leaf-ride finale so the ride is under fire as designed; it activates with `escape_leaf`.
+- **The leaf waits to be boarded.** Objective-started platforms *arm* on the objective and depart when a rider steps on (the first transcription left on the objective tick, with the player still at the waypoint). If the rider dies mid-ride the leaf resets to the tear.
+- **Stream channel rule** (found by the mission gate): the stream runs east along the hose line, crosses the road north of the waypoint, then holds the fence channel at x ≈ 28.5. Nothing taller than the leaf deck may sit in the channel — a 0.32 u crate lip is enough for auto-step to walk the rider off the leaf. Generalizes to every movePlatform route: **keep a deck-height-clear corridor**, add it to the 06 §7 P1 checks.
 
 ## 9. QA deltas
 
