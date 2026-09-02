@@ -34,6 +34,8 @@ Not yet: a stranger's playtest (the M2 exit test — hands on a mouse, see below
 
 ### Run it
 
+**No install needed:** download [`plastic-platoon.html`](plastic-platoon.html) and open it — the whole game is one self-contained file (every asset is procedural). `npm run build:single` regenerates it.
+
 ```bash
 npm install
 npm run dev            # → http://127.0.0.1:5173  (add ?map=kittest for the range)
