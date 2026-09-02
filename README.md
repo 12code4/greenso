@@ -30,7 +30,7 @@ What's in the build:
 - **Gates in `tools/`, all green on the Backyard**: `walk.mjs` (P1: 7/7 routes reachable, camera sweep clean), `combat.mjs` (ambush → kills → death → respawn), `mission.mjs` (drives all six objectives through the leaf ride to the medal tally), plus `smoke.mjs` and `shot.mjs`. All run headless on game-time clocks. They already caught four real bugs before any human played: a movement-basis sign error, an unparameterized rake, a leaf that departed without its rider, and a crate lip in the stream that walked the rider off the leaf.
 - **Kit test scene** (`?map=kittest`) — the M0 arena rebuilt at canonical scale: the kit's visual baseline and the controller playground.
 
-Not yet: a stranger's playtest (the M2 exit test — hands on a mouse, see below), real-GPU perf numbers, gamepad, saves, options menu (M3).
+**First playtest verdict (PM, 2026-09-02):** graphics good; the level can't be beaten without guidance, enemies lock on instantly, and some documented controls aren't built. All true — the fix plan is [`docs/08-three-updates.md`](docs/08-three-updates.md). Not yet: a stranger finishing hint-free (the M2 exit test), real-GPU perf numbers, gamepad, saves, options.
 
 ### Run it
 
@@ -57,6 +57,7 @@ In-game: **H** controls · **F8** free-cam · **P** log position (for transcribi
 | [`docs/06-level-architecture.md`](docs/06-level-architecture.md) | **The build system.** Canonical scale, spatial building code, `MapDef`, encounter/hazard systems, P0–P6 pipeline |
 | [`docs/07-household-kit.md`](docs/07-household-kit.md) | The prop catalog with honest dimensions and affordances |
 | [`docs/blueprints/`](docs/blueprints/) | One construction contract per campaign map (all 8) |
+| [`docs/08-three-updates.md`](docs/08-three-updates.md) | **The post-playtest plan.** Diagnosis of the first hands-on (guidance, perception, honesty), the as-built walkthrough, and three themed update sets: FAIR PLAY → PLASTIC → OPEN THE HOUSE |
 
 ## Studio context
 

@@ -21,18 +21,20 @@ Camera spec:
 - Aim mode (hold aim): shoulder-offset, FOV tightens, reticle live, sensitivity scaled.
 - Generous soft aim assist on desktop, stronger on gamepad: target magnetism on plastic torsos, never full lock. *Sarge's Heroes'* worst sin was fighting its own camera — M0's exit test is that camera + aim feel modern.
 
-## Controls (desktop-first, gamepad parity at M3)
+## Controls (desktop-first, gamepad parity in Update 3)
+
+> Status column added after the first playtest: see [`08-three-updates.md`](08-three-updates.md#03-some-controls-you-describe-but-arent-built) for the built-vs-planned audit. Rows say **Planned** where the game does not yet do what the row describes.
 
 | Verb | Key | Notes |
 |---|---|---|
 | Move / sprint | WASD / Shift | Sprint drains no meter; toy soldiers do not tire, they *fall over* |
-| Jump / vault | Space | Auto-vault low lips (book edges, tile grout ridges) |
+| Jump | Space | Auto-steps lips ≤0.35 u; a jump that reaches a ledge's shoulder mounts it (airborne lip ≤0.30). Vault *pose* — Planned (Update 2) |
 | Aim / fire | RMB / LMB | Hold-to-aim |
-| Weapon wheel / next | Q / scroll | Wheel slows time to 20% (a kid pausing to choose) |
+| Next weapon / 1·2·3 | Q / digits | Built: instant cycle. **Weapon wheel with 20% slow-time — Planned (Update 2)** |
 | Grenade | G | Cooked by hold, arc preview |
 | Interact / rescue | E | Context: free POWs, plant charges, mount set pieces |
-| Crouch | Ctrl | Slips under couch skirts, oven drawers |
-| Dive | Ctrl in sprint | Committal dodge with plastic *clack* on landing |
+| Crouch | C (Ctrl also) | Slips under couch skirts, oven drawers. C is primary — Ctrl+W closes browser tabs |
+| Dive | C in sprint | Committal dodge with plastic *clack* on landing. Dive-topple of molded Tans — Planned (Update 1) |
 
 No cover-snap system — cover is positional (the world is dense with it) and crouch-height. Keep the sim simple; the maps do the work.
 
