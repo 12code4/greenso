@@ -95,8 +95,8 @@ export class AudioEngine {
       src.loop = true;
       const f = ctx.createBiquadFilter();
       f.type = 'bandpass';
-      f.frequency.value = name === 'sprinkler' ? 2600 : 800;
-      f.Q.value = 0.8;
+      f.frequency.value = name === 'sprinkler' ? 2600 : name === 'flame' ? 620 : 800;
+      f.Q.value = name === 'flame' ? 0.5 : 0.8;
       const g = ctx.createGain();
       g.gain.setValueAtTime(0, ctx.currentTime);
       g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.4);
@@ -298,5 +298,10 @@ const RECIPES: Record<string, Recipe> = {
   whistle_grenade: (c, o, t) => { tone(c, o, t, 0.7, 1800, 600, 'sine', 0.12); },
   glint: (c, o, t) => { tone(c, o, t, 0.25, 3500, 3400, 'sine', 0.12); },
   death: (c, o, t) => { tone(c, o, t, 0.5, 300, 60, 'sawtooth', 0.15); noise(c, o, t, 0.3, { freq: 800, gain: 0.3 }); },
+  rocket: (c, o, t) => { noise(c, o, t, 0.5, { type: 'bandpass', freq: 900, freqEnd: 300, q: 1.2, gain: 0.7, attack: 0.02 }); tone(c, o, t, 0.25, 500, 120, 'sawtooth', 0.12); },
+  flame_tick: (c, o, t) => { noise(c, o, t, 0.25, { type: 'lowpass', freq: 900, freqEnd: 500, gain: 0.25, attack: 0.03 }); },
+  bark_tan: (c, o, t) => { const f0 = 380 + Math.random() * 160; tone(c, o, t, 0.16, f0, f0 * 1.25, 'sawtooth', 0.09); tone(c, o, t + 0.12, 0.14, f0 * 1.1, f0 * 0.8, 'sawtooth', 0.08); },
+  bark_green: (c, o, t) => { const f0 = 230 + Math.random() * 60; tone(c, o, t, 0.14, f0, f0 * 1.1, 'sawtooth', 0.09); tone(c, o, t + 0.11, 0.16, f0 * 0.95, f0 * 0.75, 'sawtooth', 0.08); },
+  pickup_weapon: (c, o, t) => { [392, 523, 659].forEach((f, i) => tone(c, o, t + i * 0.07, 0.25, f, f, 'square', 0.12)); noise(c, o, t, 0.08, { freq: 2200, q: 3, gain: 0.3 }); },
   victory: (c, o, t) => { [392, 523, 659, 784, 1047].forEach((f, i) => tone(c, o, t + i * 0.12, 0.35, f, f, 'triangle', 0.25)); },
 };

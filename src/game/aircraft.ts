@@ -161,7 +161,7 @@ export class AircraftSystem implements Hittable {
   }
 
   // Hittable: one sphere per plane
-  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxT: number): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3) => boolean } | null {
+  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxT: number): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3, kind?: string) => boolean } | null {
     let best: Plane | null = null;
     let bestT = maxT;
     for (const p of this.planes) {

@@ -79,7 +79,7 @@ export interface HazardDef {
   telegraph?: { cue: string; lead: number };
 }
 
-export type PickupKind = 'ammo' | 'glue' | 'moldTray' | 'marble' | 'bands';
+export type PickupKind = 'ammo' | 'glue' | 'moldTray' | 'marble' | 'bands' | 'flamer' | 'bazooka';
 
 export interface PickupDef {
   kind: PickupKind;

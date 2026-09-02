@@ -1,11 +1,12 @@
 // The Tan Command. Rank = articulation (docs/02): molded units hop between
 // lane nodes on bases and can be toppled; articulated units move, flank,
-// and retreat at Critical melt. Small FSM per unit, encounter-shared alert.
+// CHARGE when close (docs/09 §1.4), and retreat at Critical melt. Fire melts
+// them (docs/09 §1.2); kinetic hits shed plastic flecks; they shout.
 
 import * as THREE from 'three';
 import { CollisionWorld } from '../sim/collision';
 import { SoldierModel } from './soldier';
-import { Hittable } from './projectiles';
+import { Hittable, HitApply, DamageKind } from './projectiles';
 import { Fx } from './weapons';
 import { EnemyType } from '../maps/runtime/types';
 import { clamp, damp, dampAngle, rand, yawToward } from '../core/math';
@@ -15,6 +16,7 @@ export interface EnemyHooks {
   playerHit(damage: number, from: THREE.Vector3): void;
   reinforce(encounterId: string, near: THREE.Vector3): boolean;
   throwGrenade(pos: THREE.Vector3, vel: THREE.Vector3): void;
+  bark(e: Enemy, kind: 'alert' | 'hit' | 'death' | 'melt' | 'charge' | 'topple' | 'flee'): void;
 }
 
 export interface PlayerView {
@@ -23,7 +25,7 @@ export interface PlayerView {
   vel: THREE.Vector3;
 }
 
-type State = 'idle' | 'combat' | 'suspicious' | 'flee' | 'toppled' | 'dead';
+type State = 'idle' | 'combat' | 'suspicious' | 'flee' | 'charge' | 'toppled' | 'dead';
 
 // Tuned so a stationary player in the open survives a full pocket ~9–10 s;
 // cover and movement stretch that a lot (spread is the lever, not damage).
@@ -37,6 +39,7 @@ const STATS: Record<EnemyType, { hp: number; sight: number; range: number; damag
 
 const RADIUS = 0.18;
 const HEIGHT = 1.0;
+const TAN_COLOR = 0xc8a878;
 
 let glintTex: THREE.CanvasTexture | null = null;
 function glintTexture(): THREE.CanvasTexture {
@@ -76,7 +79,7 @@ export class Enemy {
   hopT = rand(1.5, 3.5);
   hopFrom = new THREE.Vector3();
   hopTo = new THREE.Vector3();
-  hopK = -1; // <0 = not hopping
+  hopK = -1;
   strafeSide = 1;
   strafeT = 1.5;
   fled = false;
@@ -84,9 +87,14 @@ export class Enemy {
   toppleT = 0;
   combatTime = 0;
   reinforced = false;
-  rising = 0; // ambush rise
+  rising = 0;
   glint: THREE.Sprite | null = null;
   moving = false;
+  /** Seconds of burning left (fire DoT → melt death). */
+  burning = 0;
+  lastKind: DamageKind = 'kinetic';
+  chargeCooldown = rand(2, 5);
+  announced = false;
 
   constructor(type: EnemyType, at: THREE.Vector3, yaw: number, encounter: string, nodes: THREE.Vector3[], scene: THREE.Scene, ambush: boolean) {
     this.type = type;
@@ -120,17 +128,9 @@ export class Enemy {
     this.syncModel();
   }
 
-  get alive(): boolean {
-    return this.state !== 'dead';
-  }
-
-  get molded(): boolean {
-    return this.type === 'based' || this.type === 'grenadier';
-  }
-
-  get eye(): THREE.Vector3 {
-    return this.pos.clone().add(new THREE.Vector3(0, this.type === 'sniper' ? 0.35 : 0.9, 0));
-  }
+  get alive(): boolean { return this.state !== 'dead'; }
+  get molded(): boolean { return this.type === 'based' || this.type === 'grenadier'; }
+  get eye(): THREE.Vector3 { return this.pos.clone().add(new THREE.Vector3(0, this.type === 'sniper' ? 0.35 : 0.9, 0)); }
 
   syncModel(): void {
     this.model.root.position.copy(this.pos);
@@ -142,6 +142,7 @@ export class Enemy {
 export class EnemyManager implements Hittable {
   list: Enemy[] = [];
   kills = 0;
+  melts = 0;
   private scene: THREE.Scene;
   private world: CollisionWorld;
   private hooks: EnemyHooks;
@@ -173,13 +174,13 @@ export class EnemyManager implements Hittable {
   }
 
   anyInCombat(): boolean {
-    return this.list.some((e) => e.alive && (e.state === 'combat' || e.state === 'flee'));
+    return this.list.some((e) => e.alive && (e.state === 'combat' || e.state === 'flee' || e.state === 'charge'));
   }
 
   /** Gunfire etc.: alert everyone within radius. */
   noise(at: THREE.Vector3, radius: number): void {
     for (const e of this.list) {
-      if (!e.alive || e.state === 'combat') continue;
+      if (!e.alive || e.state === 'combat' || e.state === 'charge') continue;
       if (e.pos.distanceTo(at) < radius) {
         e.lastSeen.copy(at);
         e.sinceSeen = 0;
@@ -196,7 +197,7 @@ export class EnemyManager implements Hittable {
       const d = e.pos.distanceTo(at);
       if (d < radius) {
         const k = 1 - d / radius;
-        this.damage(e, damage * (0.35 + 0.65 * k), this.tmp.subVectors(e.pos, at).normalize());
+        this.damage(e, damage * (0.35 + 0.65 * k), this.tmp.subVectors(e.pos, at).normalize(), 'blast');
       }
       if (e.alive && e.molded && d < radius * 1.4) this.topple(e);
     }
@@ -209,6 +210,7 @@ export class EnemyManager implements Hittable {
     e.hopK = -1;
     e.windup = 0;
     this.hooks.sfx('topple', e.pos);
+    this.hooks.bark(e, 'topple');
   }
 
   /** Molded units in a push volume get knocked over by strong forces. */
@@ -227,24 +229,18 @@ export class EnemyManager implements Hittable {
 
   // ------------------------------------------------------------ Hittable
 
-  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxT: number): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3) => boolean } | null {
+  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxT: number): { point: THREE.Vector3; t: number; apply: HitApply } | null {
     let best: Enemy | null = null;
     let bestT = maxT;
     for (const e of this.list) {
       if (!e.alive) continue;
       const t = this.hitT(e, origin, dir, bestT);
-      if (t !== null) {
-        best = e;
-        bestT = t;
-      }
+      if (t !== null) { best = e; bestT = t; }
     }
     if (!best) return null;
     const target = best;
-    return {
-      point: origin.clone().addScaledVector(dir, bestT),
-      t: bestT,
-      apply: (damage, d) => this.damage(target, damage, d),
-    };
+    const point = origin.clone().addScaledVector(dir, bestT);
+    return { point, t: bestT, apply: (damage, d, kind) => this.damage(target, damage, d, kind ?? 'kinetic', point) };
   }
 
   bestAssistPoint(origin: THREE.Vector3, dir: THREE.Vector3, coneRad: number, maxDist: number, world: CollisionWorld): THREE.Vector3 | null {
@@ -266,8 +262,27 @@ export class EnemyManager implements Hittable {
     return best;
   }
 
+  /** Flamethrower: everyone in the cone with line of sight. */
+  cone(origin: THREE.Vector3, dir: THREE.Vector3, range: number, halfAngle: number, world: CollisionWorld): HitApply[] {
+    const out: HitApply[] = [];
+    const cosHalf = Math.cos(halfAngle);
+    for (const e of this.list) {
+      if (!e.alive) continue;
+      const p = this.tmp.copy(e.pos);
+      p.y += 0.5;
+      const to = this.tmp2.subVectors(p, origin);
+      const d = to.length();
+      if (d > range || d < 0.05) continue;
+      to.divideScalar(d);
+      if (to.dot(dir) < cosHalf) continue;
+      if (world.raycast(origin, to, d - 0.3)) continue;
+      const target = e;
+      out.push((damage, dd, kind) => this.damage(target, damage, dd, kind ?? 'fire'));
+    }
+    return out;
+  }
+
   private hitT(e: Enemy, origin: THREE.Vector3, dir: THREE.Vector3, maxT: number): number | null {
-    // Two spheres: torso + head (prone: one low sphere)
     const spheres: [number, number][] = e.type === 'sniper' ? [[0.25, 0.4]] : e.state === 'toppled' ? [[0.3, 0.45]] : [[0.5, 0.38], [0.93, 0.22]];
     let best: number | null = null;
     for (const [h, r] of spheres) {
@@ -284,28 +299,43 @@ export class EnemyManager implements Hittable {
     return best;
   }
 
-  /** Returns true if the hit killed. */
-  damage(e: Enemy, amount: number, dir: THREE.Vector3): boolean {
+  /** Returns true if the hit killed. Fire melts; kinetic/blast shatters. */
+  damage(e: Enemy, amount: number, dir: THREE.Vector3, kind: DamageKind = 'kinetic', at?: THREE.Vector3): boolean {
     if (!e.alive) return false;
     e.hp -= amount;
-    this.hooks.sfx('hit_plastic', e.pos);
-    // Any hit wakes the encounter
+    e.lastKind = kind;
+    if (kind === 'fire') {
+      e.burning = Math.max(e.burning, 1.6);
+      if (Math.random() < 0.08) this.hooks.sfx('melt', e.pos);
+    } else {
+      this.hooks.sfx('hit_plastic', e.pos);
+      const fleckAt = at ?? e.pos.clone().add(new THREE.Vector3(0, 0.55, 0));
+      this.fx.plasticFlecks(fleckAt, TAN_COLOR, kind === 'blast' ? 9 : 4);
+      if (Math.random() < 0.35) this.hooks.bark(e, 'hit');
+    }
     e.lastSeen.copy(e.pos).addScaledVector(dir, -6);
     e.sinceSeen = 0;
     if (e.state === 'idle' || e.state === 'suspicious') e.state = 'combat';
     this.alertAt.set(e.encounter, this.time);
     if (e.hp <= 0) {
-      e.state = 'dead';
-      e.hp = 0;
-      this.kills++;
-      e.model.startDeath('shatter', e.pos.y);
-      if (e.glint) e.glint.visible = false;
-      this.hooks.sfx('shatter', e.pos);
+      this.kill(e, kind);
       return true;
     }
     const f = e.hp / e.maxHp;
     e.model.setDamageStage(f < 0.25 ? 3 : f < 0.6 ? 2 : 1);
     return false;
+  }
+
+  private kill(e: Enemy, kind: DamageKind): void {
+    e.state = 'dead';
+    e.hp = 0;
+    this.kills++;
+    const melt = kind === 'fire';
+    if (melt) this.melts++;
+    e.model.startDeath(melt ? 'melt' : 'shatter', e.pos.y);
+    if (e.glint) e.glint.visible = false;
+    this.hooks.sfx(melt ? 'melt' : 'shatter', e.pos);
+    this.hooks.bark(e, melt ? 'melt' : 'death');
   }
 
   // ------------------------------------------------------------ update
@@ -322,9 +352,16 @@ export class EnemyManager implements Hittable {
         }
         continue;
       }
+      // Burning: a state you can't shoot your way out of (docs/09 §1.9)
+      if (e.burning > 0) {
+        e.burning -= dt;
+        e.hp -= 14 * dt;
+        if (Math.random() < dt * 4) this.fx.flame(e.pos.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.4 + Math.random() * 0.6, (Math.random() - 0.5) * 0.4)), new THREE.Vector3(0, 0.3, 0));
+        if (e.hp <= 0) { this.kill(e, 'fire'); continue; }
+      }
       this.think(e, dt, player, concealmentAt);
       this.move(e, dt);
-      e.model.animateLocomotion(dt, e.moving, e.state === 'combat');
+      e.model.animateLocomotion(dt, e.moving, e.state === 'combat' || e.state === 'charge');
       e.model.update(dt);
       e.syncModel();
     }
@@ -334,22 +371,17 @@ export class EnemyManager implements Hittable {
     e.stateT += dt;
     e.moving = false;
 
-    // Ambush rise
     if (e.rising > 0) {
       e.rising -= dt;
       e.model.root.scale.y = clamp(1 - e.rising / 0.9, 0.05, 1);
-      if (e.rising <= 0) e.model.root.scale.y = 1;
+      if (e.rising <= 0) { e.model.root.scale.y = 1; this.hooks.bark(e, 'alert'); e.announced = true; }
       return;
     }
 
-    // Toppled: lie there, then get up
     if (e.state === 'toppled') {
       e.toppleT -= dt;
       e.toppleK = e.toppleT > 0.6 ? damp(e.toppleK, 1, 14, dt) : damp(e.toppleK, 0, 8, dt);
-      if (e.toppleT <= 0) {
-        e.toppleK = 0;
-        e.state = 'combat';
-      }
+      if (e.toppleT <= 0) { e.toppleK = 0; e.state = 'combat'; }
       return;
     }
 
@@ -368,45 +400,57 @@ export class EnemyManager implements Hittable {
       const occluded = !!this.world.raycast(eye, dir, d - 0.4);
       if (!occluded) {
         const conceal = dist < 4.5 ? 0 : concealmentAt(player.pos);
-        // Detection is probabilistic per second in cover; instant once in combat
-        if (e.state === 'combat') sees = conceal < 0.95 || dist < 8;
+        if (e.state === 'combat' || e.state === 'charge') sees = conceal < 0.95 || dist < 8;
         else sees = Math.random() < (1 - conceal) * dt * 2.2 + (dist < 4.5 ? 1 : 0);
       }
     }
     if (sees) {
       e.lastSeen.copy(player.pos);
       e.sinceSeen = 0;
-      if (e.state !== 'flee') e.state = 'combat';
+      if (e.state !== 'flee' && e.state !== 'charge') {
+        if (e.state !== 'combat' && !e.announced) { this.hooks.bark(e, 'alert'); e.announced = true; }
+        e.state = 'combat';
+      }
       this.alertAt.set(e.encounter, this.time);
     } else {
       e.sinceSeen += dt;
     }
-    // Encounter-shared alert: comrades shout
     const alertT = this.alertAt.get(e.encounter);
     if (e.state === 'idle' && alertT !== undefined && this.time - alertT > 0.6 && this.time - alertT < 30) {
       e.state = 'combat';
       e.lastSeen.copy(player.pos);
       e.sinceSeen = 0.1;
     }
-    if (e.state === 'combat') e.combatTime += dt;
+    if (e.state === 'combat' || e.state === 'charge') e.combatTime += dt;
 
-    // Lose track → suspicious → idle
     if (e.state === 'combat' && e.sinceSeen > 6) e.state = 'suspicious';
-    if (e.state === 'suspicious' && e.sinceSeen > 14) e.state = 'idle';
+    if (e.state === 'suspicious' && e.sinceSeen > 14) { e.state = 'idle'; e.announced = false; }
 
-    // Face the player when engaged (molded pivot on their base)
-    if (e.state === 'combat' || e.state === 'suspicious') {
-      const want = yawToward(e.pos, e.lastSeen);
+    if (e.state === 'combat' || e.state === 'suspicious' || e.state === 'charge') {
+      const want = yawToward(e.pos, e.state === 'charge' ? player.pos : e.lastSeen);
       e.yaw = dampAngle(e.yaw, want, e.molded ? 6 : 10, dt);
     }
 
     // ---- Critical → flee (articulated only)
-    if (!e.molded && e.type !== 'sniper' && e.hp / e.maxHp < 0.25 && !e.fled && e.state === 'combat') {
+    if (!e.molded && e.type !== 'sniper' && e.hp / e.maxHp < 0.25 && !e.fled && (e.state === 'combat' || e.state === 'charge')) {
       e.fled = true;
       e.state = 'flee';
       e.stateT = 0;
+      this.hooks.bark(e, 'flee');
     }
     if (e.state === 'flee' && e.stateT > 3) e.state = 'combat';
+
+    // ---- Trooper CHARGE: "charging you down when you trigger their arrival"
+    if (e.type === 'trooper' && e.state === 'combat' && sees) {
+      e.chargeCooldown -= dt;
+      if (e.chargeCooldown <= 0 && dist < 11 && dist > 3) {
+        e.state = 'charge';
+        e.stateT = 0;
+        e.chargeCooldown = rand(6, 10);
+        this.hooks.bark(e, 'charge');
+      }
+    }
+    if (e.state === 'charge' && (e.stateT > 2.6 || dist < 2.2 || !player.alive)) e.state = 'combat';
 
     // ---- Officer: buffs are read by molded units; one reinforcement call
     if (e.type === 'officer' && e.state === 'combat' && e.combatTime > 14 && !e.reinforced) {
@@ -415,12 +459,12 @@ export class EnemyManager implements Hittable {
     }
 
     // ---- Attacks
-    if (e.state === 'combat' && player.alive) {
+    if ((e.state === 'combat' || e.state === 'charge') && player.alive) {
       const buffed = this.officerNear(e);
       switch (e.type) {
         case 'trooper':
         case 'officer':
-          this.troopFire(e, dt, player, dist, sees, stats.damage, stats.spreadDeg, e.type === 'officer');
+          this.troopFire(e, dt, player, dist, sees, stats.damage, stats.spreadDeg + (e.state === 'charge' ? 4 : 0), e.type === 'officer');
           break;
         case 'based':
           this.basedFire(e, dt, player, dist, sees, buffed);
@@ -461,7 +505,7 @@ export class EnemyManager implements Hittable {
   }
 
   private basedFire(e: Enemy, dt: number, player: PlayerView, dist: number, sees: boolean, buffed: boolean): void {
-    if (e.hopK >= 0) return; // no firing mid-hop
+    if (e.hopK >= 0) return;
     if (!sees || dist > STATS.based.range) return;
     e.fireT -= dt * (buffed ? 1.25 : 1);
     if (e.windup > 0) {
@@ -472,7 +516,7 @@ export class EnemyManager implements Hittable {
       }
       if (e.windup <= 0) {
         this.shoot(e, player, STATS.based.damage, STATS.based.spreadDeg);
-        e.fireT = 1.6;
+        e.fireT = 1.9;
       }
     } else if (e.fireT <= 0) {
       e.windup = 0.45;
@@ -485,7 +529,6 @@ export class EnemyManager implements Hittable {
     if (e.windup > 0) {
       e.windup -= dt;
       if (e.windup <= 0) {
-        // Solve a lob: time of flight T toward where the player is heading
         const T = 1.4;
         const from = e.pos.clone().add(new THREE.Vector3(0, 1.0, 0));
         const target = player.pos.clone().addScaledVector(player.vel, 0.5);
@@ -529,13 +572,11 @@ export class EnemyManager implements Hittable {
     const target = player.pos.clone();
     target.y += 0.5;
     const dir = target.sub(muzzle).normalize();
-    // Spread
     const s = THREE.MathUtils.degToRad(spreadDeg);
     dir.x += (Math.random() - 0.5) * s;
     dir.y += (Math.random() - 0.5) * s;
     dir.z += (Math.random() - 0.5) * s;
     dir.normalize();
-    // Player hit test: sphere at chest
     const c = player.pos.clone();
     c.y += 0.5;
     const oc = muzzle.clone().sub(c);
@@ -560,50 +601,41 @@ export class EnemyManager implements Hittable {
     this.fx.tracer(muzzle, end, 0xffd9a0);
     this.fx.muzzleFlash(muzzle, false);
     this.hooks.sfx('rifle', muzzle);
-    if (e.type !== 'sniper' && !e.molded) e.model.setPose('aim');
+    if (e.type !== 'sniper' && !e.molded && e.state !== 'charge') e.model.setPose('aim');
   }
 
   // ------------------------------------------------------------ movement
 
   private move(e: Enemy, dt: number): void {
     if (e.state === 'toppled' || e.rising > 0) return;
-    if (e.molded) {
-      this.hop(e, dt);
-      return;
-    }
+    if (e.molded) { this.hop(e, dt); return; }
     if (e.type === 'sniper') return;
 
-    // Articulated steering
-    let wish = this.tmp.set(0, 0, 0);
+    const wish = this.tmp.set(0, 0, 0);
     const toTarget = this.tmp2.subVectors(e.lastSeen, e.pos);
     toTarget.y = 0;
     const dist = toTarget.length();
-    const speed = e.state === 'flee' ? 4.6 : 3.2;
+    const speed = e.state === 'flee' ? 4.6 : e.state === 'charge' ? 4.8 : 3.2;
     if (e.state === 'flee') {
       wish.copy(toTarget).multiplyScalar(-1);
+    } else if (e.state === 'charge') {
+      wish.copy(toTarget);
     } else if (e.state === 'combat' || e.state === 'suspicious') {
       const near = e.type === 'officer' ? 12 : 6;
       const far = e.type === 'officer' ? 17 : 10;
       const leashed = e.pos.distanceTo(e.home) > 14 && dist > 6;
-      if (leashed) {
-        wish.subVectors(e.home, e.pos);
-      } else if (dist > far) {
-        wish.copy(toTarget);
-      } else if (dist < near) {
-        wish.copy(toTarget).multiplyScalar(-1);
-      } else if (e.state === 'combat') {
+      if (leashed) wish.subVectors(e.home, e.pos);
+      else if (dist > far) wish.copy(toTarget);
+      else if (dist < near) wish.copy(toTarget).multiplyScalar(-1);
+      else if (e.state === 'combat') {
         e.strafeT -= dt;
-        if (e.strafeT <= 0) {
-          e.strafeSide = Math.random() < 0.5 ? -1 : 1;
-          e.strafeT = rand(1.4, 3);
-        }
+        if (e.strafeT <= 0) { e.strafeSide = Math.random() < 0.5 ? -1 : 1; e.strafeT = rand(1.4, 3); }
         wish.set(-toTarget.z, 0, toTarget.x).multiplyScalar(e.strafeSide);
       }
     }
     wish.y = 0;
     if (wish.lengthSq() > 0.01) {
       wish.normalize();
-      // Obstacle avoidance: probe ahead, try ±60°
       const probe = e.pos.clone();
       probe.y += 0.5;
       if (this.world.raycast(probe, wish, 1.3)) {
@@ -623,33 +655,23 @@ export class EnemyManager implements Hittable {
     const res = this.world.resolveCapsule(e.pos, RADIUS, HEIGHT, 0.35, e.grounded);
     e.grounded = res.grounded;
     if (res.grounded && e.vel.y < 0) e.vel.y = 0;
-    if (e.moving && e.state !== 'combat') e.yaw = dampAngle(e.yaw, Math.atan2(-wish.x, -wish.z), 10, dt);
-    if (e.pos.y < -10) {
-      e.hp = 0;
-      e.state = 'dead';
-      e.model.startDeath('shatter', 0);
-    }
+    if (e.moving && e.state !== 'combat' && e.state !== 'charge') e.yaw = dampAngle(e.yaw, Math.atan2(-wish.x, -wish.z), 10, dt);
+    if (e.pos.y < -10) { e.hp = 0; e.state = 'dead'; e.model.startDeath('shatter', 0); }
   }
 
-  /** Molded units hop between their lane nodes on a timer. */
   private hop(e: Enemy, dt: number): void {
     if (e.hopK >= 0) {
       e.hopK += dt / 0.55;
       const k = Math.min(1, e.hopK);
       e.pos.lerpVectors(e.hopFrom, e.hopTo, k);
       e.pos.y = THREE.MathUtils.lerp(e.hopFrom.y, e.hopTo.y, k) + Math.sin(k * Math.PI) * 0.5;
-      if (e.hopK >= 1) {
-        e.hopK = -1;
-        e.pos.copy(e.hopTo);
-        this.hooks.sfx('clack', e.pos);
-      }
+      if (e.hopK >= 1) { e.hopK = -1; e.pos.copy(e.hopTo); this.hooks.sfx('clack', e.pos); }
       return;
     }
     if (e.state !== 'combat' || e.nodes.length < 2) return;
     e.hopT -= dt * (this.officerNear(e) ? 1.3 : 1);
     if (e.hopT <= 0) {
       e.hopT = e.type === 'grenadier' ? rand(4, 6) : rand(2.8, 4.5);
-      // Pick a different node
       const others = e.nodes.filter((n) => n.distanceToSquared(e.pos) > 0.5);
       if (others.length) {
         e.hopFrom.copy(e.pos);

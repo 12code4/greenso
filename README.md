@@ -27,10 +27,12 @@ What's in the build:
 - **Combat** (the M1 essentials the slice can't exist without): Melt Meter health with material damage stages and toy deaths (shatter debris, melt puddles); the Tan roster — Trooper, Based Rifleman (hops between lane nodes, topples), Grenadier, Prone Sniper (glint telegraph), Officer (reinforcement call); rifle, cap pistol, rubber-band sniper (pins to surfaces), cooked grenades with arc preview; soft bullet magnetism; **pose-snap animation** (molded poses snapped at 9 fps — docs/04 bet 2, in embryo).
 - **Grass as perception volumes** — concealment for the player, flattened by the sprinkler's soak on a timer so sightlines open twice a cycle.
 - **Audio v1** — all-procedural WebAudio: cap cracks, plastic clacks, rubber-band thwips, pipe-knock telegraphs, birds and wind, a marching-snare combat loop.
-- **Gates in `tools/`, all green on the Backyard**: `walk.mjs` (P1: 7/7 routes reachable, camera sweep clean), `combat.mjs` (ambush → kills → death → respawn), `mission.mjs` (drives all six objectives through the leaf ride to the medal tally), plus `smoke.mjs` and `shot.mjs`. All run headless on game-time clocks. They already caught four real bugs before any human played: a movement-basis sign error, an unparameterized rake, a leaf that departed without its rider, and a crate lip in the stream that walked the rider off the leaf.
+- **Gates in `tools/`, all green on the Backyard**: `walk.mjs` (P1: 7/7 routes reachable, camera sweep clean), `combat.mjs` (ambush → kills → death → respawn), `firepower.mjs` (flamer melts, bazooka kills), `mission.mjs` (drives all six objectives through the leaf ride to the medal tally), plus `smoke.mjs` and `shot.mjs`. All run headless on game-time clocks. They already caught four real bugs before any human played: a movement-basis sign error, an unparameterized rake, a leaf that departed without its rider, and a crate lip in the stream that walked the rider off the leaf.
 - **Kit test scene** (`?map=kittest`) — the M0 arena rebuilt at canonical scale: the kit's visual baseline and the controller playground.
 
-**First playtest verdict (PM, 2026-09-02):** graphics good; the level can't be beaten without guidance, enemies lock on instantly, and some documented controls aren't built. All true — the fix plan is [`docs/08-three-updates.md`](docs/08-three-updates.md). Not yet: a stranger finishing hint-free (the M2 exit test), real-GPU perf numbers, gamepad, saves, options.
+**First playtest verdict (PM, 2026-09-02):** graphics good; the level can't be beaten without guidance, enemies lock on instantly, some documented controls aren't built, and — the big one — *the fun and charm of Sarge's Heroes isn't there yet.* The study that answers that is [`docs/09-sarges-heroes-study.md`](docs/09-sarges-heroes-study.md); it sets the plan of record: four updates, **FIREPOWER → TOY SOLDIERS → FAIR PLAY → HEROES & CONTENT**.
+
+**Update 1 — FIREPOWER is in** (docs/09 §5): birthday-candle flamethrower that *melts* Tans, matchstick bazooka, weapon crates as detours, plastic flecks on hits, screaming Tan barks vs deadpan Moss, troopers that charge, denser pockets and a first-contact picket on the lawn. Aim assist is untouched from M0. Not yet: a stranger finishing hint-free (the M2 exit test), real-GPU perf numbers, gamepad, saves, options.
 
 ### Run it
 
@@ -57,7 +59,8 @@ In-game: **H** controls · **F8** free-cam · **P** log position (for transcribi
 | [`docs/06-level-architecture.md`](docs/06-level-architecture.md) | **The build system.** Canonical scale, spatial building code, `MapDef`, encounter/hazard systems, P0–P6 pipeline |
 | [`docs/07-household-kit.md`](docs/07-household-kit.md) | The prop catalog with honest dimensions and affordances |
 | [`docs/blueprints/`](docs/blueprints/) | One construction contract per campaign map (all 8) |
-| [`docs/08-three-updates.md`](docs/08-three-updates.md) | **The post-playtest plan.** Diagnosis of the first hands-on (guidance, perception, honesty), the as-built walkthrough, and three themed update sets: FAIR PLAY → PLASTIC → OPEN THE HOUSE |
+| [`docs/08-three-updates.md`](docs/08-three-updates.md) | The first post-playtest plan: diagnosis of the hands-on (guidance, perception, honesty), the as-built walkthrough, three themed update sets. Superseded where docs/09 differs |
+| [`docs/09-sarges-heroes-study.md`](docs/09-sarges-heroes-study.md) | **The soul study and the plan of record.** Ten principles of what made *Sarge's Heroes* fun, the gap table against our slice, the graphics direction ("stylized toys turned soldiers"), the four updates, and the ship log |
 
 ## Studio context
 

@@ -94,6 +94,51 @@ function buildVisual(kind: PickupKind): THREE.Object3D {
       g.add(helmet);
       return g;
     }
+    case 'flamer': {
+      // Red fuel canister with a brass nozzle — the birthday-candle fuel tank
+      const g = new THREE.Group();
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.7, 14), mat('METAL_KITCHEN', 0xc93a3a));
+      tank.position.y = 0.35;
+      tank.castShadow = true;
+      g.add(tank);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 10), mat('METAL_KITCHEN', 0xd8b04a));
+      cap.position.y = 0.76;
+      g.add(cap);
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.6, 8), mat('METAL_KITCHEN', 0xd8b04a));
+      nozzle.rotation.z = Math.PI / 2;
+      nozzle.position.set(0.45, 0.5, 0);
+      g.add(nozzle);
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 8), mat('PLASTIC_TOY', 0xffa030, { emissive: 0xff5a10 }));
+      flame.position.set(0.85, 0.5, 0);
+      flame.rotation.z = -Math.PI / 2;
+      g.add(flame);
+      const label = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.26, 0.02), mat('PAPERBOARD', 0xf4e2b0));
+      label.position.set(0, 0.35, 0.28);
+      g.add(label);
+      return g;
+    }
+    case 'bazooka': {
+      // Green tube with two matchstick rockets in a cardboard sleeve
+      const g = new THREE.Group();
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.4, 12), mat('PLASTIC_TOY', 0x3e6a34));
+      tube.rotation.z = Math.PI / 2;
+      tube.position.y = 0.3;
+      tube.castShadow = true;
+      g.add(tube);
+      const sight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.06), mat('PLASTIC_TOY', 0x2f5c28));
+      sight.position.set(-0.2, 0.5, 0);
+      g.add(sight);
+      for (let i = 0; i < 2; i++) {
+        const rocket = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), mat('WOOD_WARM', 0xe8d9b0));
+        rocket.rotation.z = Math.PI / 2;
+        rocket.position.set(0, 0.08, 0.3 + i * 0.16);
+        g.add(rocket);
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), mat('PLASTIC_TOY', 0xc93a3a));
+        tip.position.set(-0.28, 0.08, 0.3 + i * 0.16);
+        g.add(tip);
+      }
+      return g;
+    }
     case 'marble': {
       const g = new THREE.Group();
       const outer = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), mat('GLASS_CHEAP', 0xbfe4ff));

@@ -188,7 +188,7 @@ export class TargetRange {
     origin: THREE.Vector3,
     dir: THREE.Vector3,
     maxT: number,
-  ): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3) => boolean } | null {
+  ): { point: THREE.Vector3; t: number; apply: (damage: number, dir: THREE.Vector3, kind?: string) => boolean } | null {
     this.raycaster.set(origin, dir);
     this.raycaster.far = maxT;
     const hits = this.raycaster.intersectObjects(this.allHitMeshes, false);

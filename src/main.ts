@@ -11,6 +11,7 @@ import { EnemyManager } from './game/enemies';
 import { Projectiles, Hittable } from './game/projectiles';
 import { PowSystem } from './game/pows';
 import { AircraftSystem } from './game/aircraft';
+import { Barks, TAN_BARKS, MOSS_BARKS } from './game/barks';
 import { Hud } from './ui/hud';
 import { AudioEngine } from './audio/synth';
 import { MAPS, DEFAULT_MAP, BASE_GROUND } from './maps/defs';
@@ -71,11 +72,15 @@ const projectiles = new Projectiles(scene, {
   sfx: (name, at) => audio.play(name, at),
 });
 
+const barks = new Barks(scene);
+barks.onSay = (color, at) => audio.play(color === 'tan' ? 'bark_tan' : 'bark_green', at, 0.5);
+
 const enemies: EnemyManager = new EnemyManager(scene, world, {
   sfx: (name, at) => audio.play(name, at, 0.7),
   playerHit: (damage, from) => player.takeDamage(damage, from),
   reinforce: (id, near) => director.reinforce(id, near),
   throwGrenade: (pos, vel) => projectiles.spawnGrenade(pos, vel, 1.6, 'tan'),
+  bark: (e, kind) => barks.sayRandom(e, e.pos, TAN_BARKS[kind], 'tan'),
 });
 
 const aircraft = new AircraftSystem(mapDef.aircraft ?? [], scene, {
@@ -97,9 +102,11 @@ const pows = new PowSystem(mapDef.pows ?? [], scene, {
   sfx: (name, at) => audio.play(name, at),
   onFreed: (id, name) => {
     void id;
-    weapons.hasSniper = true;
+    weapons.unlock('sniper');
     weapons.addBands(6);
-    hud.toast(`${name} freed — rubber-band sniper acquired (3)`, 4);
+    audio.play('pickup_weapon', player.pos, 0.8);
+    hud.toast(`${name} freed — RUBBER-BAND SNIPER acquired (3)`, 4);
+    barks.say(player, player.pos, 'Welcome back, Corporal.', 'green');
   },
 });
 
@@ -112,7 +119,17 @@ const targets = new TargetRange(scene, lanes);
 const hittables: Hittable[] = [enemies, aircraft, targets];
 
 const weapons = new Weapons(scene, player, projectiles, world);
-weapons.onHit = (killed) => hud.hitMarker(killed);
+let killStreakT = 0;
+weapons.onHit = (killed) => {
+  hud.hitMarker(killed);
+  if (!killed) return;
+  const lines = killStreakT > 0 ? MOSS_BARKS.multikill
+    : weapons.current.id === 'flamer' ? MOSS_BARKS.flamer
+    : weapons.current.id === 'bazooka' ? MOSS_BARKS.bazooka
+    : MOSS_BARKS.kill;
+  killStreakT = 2.5;
+  if (Math.random() < 0.55) barks.sayRandom(player, player.pos, lines, 'green');
+};
 weapons.onFire = (name, at, noise) => {
   audio.play(name, at, 0.8);
   enemies.noise(player.pos, noise);
@@ -157,6 +174,7 @@ player.onDamaged = (amount, from) => {
   hud.damageFlash();
   cam.addTrauma(Math.min(0.5, amount / 60));
   audio.play('hurt', from ?? player.pos, 0.9);
+  if (player.alive && Math.random() < 0.25) barks.sayRandom(player, player.pos, player.hp < 35 ? MOSS_BARKS.lowhp : MOSS_BARKS.hurt, 'green');
 };
 player.onDeath = () => {
   audio.play('shatter', player.pos);
@@ -166,8 +184,18 @@ player.onDeath = () => {
 
 map.pickups.onCollect = (kind, id, at) => {
   void id;
-  audio.play(kind === 'marble' ? 'marble' : 'pickup', at);
+  audio.play(kind === 'marble' ? 'marble' : kind === 'flamer' || kind === 'bazooka' ? 'pickup_weapon' : 'pickup', at);
   switch (kind) {
+    case 'flamer':
+      weapons.unlock('flamer'); weapons.addFuel(80);
+      hud.toast('BIRTHDAY-CANDLE FLAMETHROWER — melt them (4)', 4);
+      hud.radio('LT. OLIVE', 'That\'s a candle torch. Tans melt. Try not to enjoy it.', 4);
+      break;
+    case 'bazooka':
+      weapons.unlock('bazooka'); weapons.addRockets(3);
+      hud.toast('MATCHSTICK BAZOOKA — 3 rockets (5)', 4);
+      hud.radio('LT. OLIVE', 'Bazooka. Aim for the barricades, not your feet.', 4);
+      break;
     case 'ammo': weapons.addAmmo(40); hud.toast('+40 BBs · +1 grenade'); break;
     case 'bands': weapons.addBands(6); hud.toast('+6 rubber bands'); break;
     case 'glue': player.heal(35); hud.toast('Doc\'s glue: +35% melt'); break;
@@ -209,6 +237,7 @@ if (TEST_MODE) {
     },
     teleport: (x: number, y: number, z: number) => { player.pos.set(x, y, z); player.vel.set(0, 0, 0); },
     heal: () => player.heal(100),
+    give: (id: 'flamer' | 'bazooka' | 'sniper') => { weapons.unlock(id); weapons.addFuel(200); weapons.addRockets(8); weapons.addBands(12); },
     activate: (id: string) => director.activate(id),
     // Flow tests: force-clear an encounter (combat is gated separately)
     clearEncounter: (id: string) => {
@@ -233,6 +262,9 @@ if (TEST_MODE) {
       marbles: map.pickups.marblesFound,
       enemies: enemies.list.filter((e) => e.alive).length,
       kills: enemies.kills,
+      melts: enemies.melts,
+      weapon: weapons.current.id,
+      owned: [...weapons.owned],
       combat: enemies.anyInCombat(),
       planes: aircraft.planes.length,
       downed: targets.downed,
@@ -283,6 +315,7 @@ function frame(): void {
       player.respawnAt(map.regions.checkpoint);
       map.platforms.resetArmed();
       hud.setMelt(1);
+      barks.sayRandom(player, player.pos, MOSS_BARKS.respawn, 'green');
     }
 
     if (!free) cam.update(dt, input, player.pos, player.pivotHeight, aiming, player.sprinting, world);
@@ -299,6 +332,9 @@ function frame(): void {
     pows.overwatch(dt, enemies, world);
     if (mission) mission.update(dt, { playerPos: player.pos, regions: map.regions, director, isFreed: (id) => pows.isFreed(id) });
     audio.setCombat(enemies.anyInCombat() || aircraft.planes.length > 0);
+    audio.loop('flame', weapons.firingFlame && player.alive, 0.5);
+    barks.update(dt);
+    if (killStreakT > 0) killStreakT -= dt;
 
     map.sun.position.copy(player.pos).add(sunOffset);
     map.sun.target.position.copy(player.pos);
@@ -310,7 +346,7 @@ function frame(): void {
     hud.setMelt(player.hp / player.maxHp);
     hud.setMarbles(map.pickups.marblesFound, map.pickups.marblesTotal);
     if (lanes.length) hud.setStats(`TARGETS DOWN ${targets.downed} · ACCURACY ${weapons.stats.shots ? Math.round((weapons.stats.hits / weapons.stats.shots) * 100) : 0}%`);
-    else if (enemies.kills) hud.setStats(`TANS DOWN ${enemies.kills}`);
+    else if (enemies.kills) hud.setStats(`TANS DOWN ${enemies.kills}${enemies.melts ? ` · MELTED ${enemies.melts}` : ''}`);
   }
 
   audio.update(dt);

@@ -179,6 +179,16 @@ export const BACKYARD: MapDef = {
         { type: 'trooper', at: [-6, 0, -8] },
         { type: 'trooper', at: [4, 0, -10] },
         { type: 'trooper', at: [1, 0, -3] },
+        { type: 'trooper', at: [9, 0, -5] },
+      ],
+    },
+    {
+      // First contact on the mowed lawn: two pickets by the Stones. Small, in the open, teaches the charge.
+      id: 'E_steppe', template: 'PICKET_LINE', region: 'R_steppe',
+      activation: { kind: 'region-enter', region: 'R_steppe' },
+      units: [
+        { type: 'trooper', at: [-6, 0, 12], yaw: 0 },
+        { type: 'trooper', at: [5, 0, 10], yaw: 0 },
       ],
     },
     {
@@ -188,8 +198,10 @@ export const BACKYARD: MapDef = {
         { type: 'based', at: [-20, 0, -12], nodes: [[-22.5, 0, -12], [-18, 0, -12]] },
         { type: 'based', at: [-26, 0, -11], nodes: [[-28, 0, -11], [-24.5, 0, -11.5]] },
         { type: 'based', at: [-16, 0, -13.5], nodes: [[-17.5, 0, -14], [-15, 0, -13]] },
+        { type: 'based', at: [-23, 0, -8], nodes: [[-24.5, 0, -8], [-21.5, 0, -8]] },
         { type: 'trooper', at: [-28, 0, -3] },
         { type: 'trooper', at: [-28.5, 0, 1.5] },
+        { type: 'trooper', at: [-17, 0, 2] },
       ],
     },
     {
@@ -210,6 +222,7 @@ export const BACKYARD: MapDef = {
         { type: 'based', at: [23, 0.1, -2.5], nodes: [[22, 0.1, -3], [24, 0.1, -2]] },
         { type: 'officer', at: [23, 0, -11] },
         { type: 'trooper', at: [18, 0, -14] },
+        { type: 'trooper', at: [27, 0, -14] },
       ],
     },
     {
@@ -269,6 +282,9 @@ export const BACKYARD: MapDef = {
     { kind: 'ammo', at: [20, 0, 4] },
     { kind: 'bands', at: [-24, BIRD_RIM + 0.1, -34.2] },
     { kind: 'bands', at: [-14, T1, -29] },
+    // Arsenal early (docs/09 §1): flamethrower in the Jungle's far corner, bazooka at the convoy road's north end
+    { kind: 'flamer', at: [11, 0, -13] },
+    { kind: 'bazooka', at: [23, 0.2, -24] },
     // Glue at pocket exits; mold tray on the flowerbed (~60% of path)
     { kind: 'glue', at: [-13, 0, -14] },
     { kind: 'glue', at: [-14, T1, -24.5] },
