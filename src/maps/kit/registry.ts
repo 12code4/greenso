@@ -382,40 +382,70 @@ reg({
 });
 
 // Lean ramps (docs/06 §2): a diagonal visual over a stepped collider (0.3 u
-// risers → auto-step chains into a climb). Variants: 0 = the birdbath rake
-// (rise 10.1 to the rim from the lawn), 1 = a short garden rake (rise 3.0).
+// risers → auto-step chains into a climb). Variants: 0 = the birdbath ladder
+// (rise 10.1 to the rim from the lawn), 1 = a short garden ramp (rise 3.0).
+// Playtest lesson: the walkable lane must be WIDE (1.6 u) and VISIBLE — a
+// 0.7 u lane on a thin pole slid real players off the side. So the kid lashed
+// popsicle-stick rungs between two garden-tool handles: a ladder you can read.
 const RAKE_VARIANTS: [number, number][] = [[10.1, 10.1], [3.6, 3.0]]; // [run, rise]
+const RAMP_WIDTH = 1.6;
 
 reg({
   id: 'rake_ramp',
   // The instance's yaw points local +X toward the ledge.
-  dims: [10.1, 10.1, 0.7],
+  dims: [10.1, 10.1, RAMP_WIDTH],
   walkableTop: true,
   build(v) {
     const [run, rise] = RAKE_VARIANTS[Math.abs(v) % RAKE_VARIANTS.length];
-    const width = 0.7;
     const g = new THREE.Group();
     const len = Math.hypot(run, rise);
-    const handle = cylMesh(0.14, len + 1.6, mat('WOOD_WARM', 0xc9a56a), 0, 10);
-    handle.rotation.z = -Math.atan2(rise, run) + Math.PI / 2;
-    handle.position.set(run / 2, rise / 2, 0);
-    g.add(handle);
+    const slope = Math.atan2(rise, run);
+    const wood = mat('WOOD_WARM', 0xc9a56a);
+    const stick = mat('WOOD_WARM', 0xe0c58a);
+    // Two rails: a rake handle and a hoe handle, lashed side by side
+    for (const z of [-0.62, 0.62]) {
+      const rail = cylMesh(0.14, len + 1.6, wood, 0, 10);
+      rail.rotation.z = -slope + Math.PI / 2;
+      rail.position.set(run / 2, rise / 2 + 0.08, z);
+      g.add(rail);
+    }
+    // Popsicle-stick rungs every 0.7 u of run — the readable "this is a ladder"
+    for (let x = 0.35; x < run; x += 0.7) {
+      const t = x / run;
+      const rung = boxMesh(0.22, 0.06, RAMP_WIDTH - 0.1, stick, 0);
+      rung.rotation.z = slope;
+      rung.position.set(x, t * rise + 0.12, 0);
+      g.add(rung);
+    }
     // Rake head lying at the foot, tines toward the ledge
     const head = boxMesh(0.3, 0.14, 1.9, mat('METAL_KITCHEN', 0x6a6a6a), 0.07);
-    head.position.x = -0.5;
+    head.position.set(-0.7, 0, -0.62);
     g.add(head);
     for (let i = 0; i < 9; i++) {
       const tine = boxMesh(0.55, 0.06, 0.06, mat('METAL_KITCHEN', 0x7a7a7a), 0.07);
-      tine.position.set(-0.85, 0.07, -0.8 + i * 0.2);
+      tine.position.set(-1.05, 0.07, -1.42 + i * 0.2);
       g.add(tine);
     }
+    // Kid's chalk arrow on the ground pointing up the ramp
+    const chalk = mat('PAPERBOARD', 0xf6f6f0);
+    const shaft = boxMesh(0.9, 0.02, 0.16, chalk, 0.011);
+    shaft.position.set(-2.0, 0, 0.4);
+    g.add(shaft);
+    for (const sgn of [1, -1]) {
+      const wing = boxMesh(0.5, 0.02, 0.14, chalk, 0.011);
+      wing.rotation.y = sgn * 0.75;
+      wing.position.set(-1.72, 0, 0.4 + sgn * 0.18);
+      g.add(wing);
+    }
     const colliders: LocalBox[] = [];
+    // A low landing at the foot catches an off-angle approach
+    colliders.push(solid(1.2, 0.15, RAMP_WIDTH, 0.075, -0.45));
     const steps = Math.ceil(rise / 0.3);
     for (let i = 0; i < steps; i++) {
       const t0 = i / steps, t1 = (i + 1) / steps;
       const x = ((t0 + t1) / 2) * run;
       const top = t1 * rise;
-      colliders.push(solid(run / steps + 0.05, top, width, top / 2, x));
+      colliders.push(solid(run / steps + 0.05, top, RAMP_WIDTH, top / 2, x));
     }
     return { mesh: g, colliders };
   },
