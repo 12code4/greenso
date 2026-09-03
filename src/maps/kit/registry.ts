@@ -305,10 +305,23 @@ reg({
     // Lashed popsicle-stick lattice: two rails + 5 uprights, leaning slightly
     const g = new THREE.Group();
     const wood = mat('WOOD_WARM', 0xd9b98a);
+    const twine = mat('FABRIC_SOFT', 0x8a6a3a);
     for (let i = 0; i < 5; i++) {
       const up = boxMesh(0.19, 0.9, 0.04, wood);
       up.position.x = -0.9 + i * 0.45;
+      up.rotation.z = (i % 2 ? 1 : -1) * 0.03;
       g.add(up);
+      const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 0.04, 10), wood);
+      tip.rotation.x = Math.PI / 2;
+      tip.position.set(up.position.x, 0.9, 0);
+      g.add(tip);
+      for (const y of [0.25, 0.7]) {
+        const lash = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.018, 5, 10), twine);
+        lash.rotation.y = Math.PI / 2;
+        lash.rotation.x = 0.4;
+        lash.position.set(up.position.x, y, 0.03);
+        g.add(lash);
+      }
     }
     for (const y of [0.25, 0.7]) {
       const rail = boxMesh(2.1, 0.19, 0.04, wood, y);
@@ -464,6 +477,17 @@ reg({
       lip.position.z = z;
       g.add(lip);
     }
+    // Two shallow grooves down the running surface and a joiner tab at each end
+    for (const z of [-0.18, 0.18]) {
+      const groove = boxMesh(w, 0.012, 0.03, mat('PLASTIC_TOY', 0xd0640f), h + 0.006);
+      groove.position.z = z;
+      g.add(groove);
+    }
+    for (const x of [-w / 2 + 0.06, w / 2 - 0.06]) {
+      const tab = boxMesh(0.12, 0.05, 0.4, mat('PLASTIC_TOY', 0x5a3d2a), h + 0.025);
+      tab.position.x = x;
+      g.add(tab);
+    }
     return { mesh: g, colliders: [solid(w, h, d)] };
   },
 });
@@ -562,27 +586,79 @@ reg({
   build() {
     const g = new THREE.Group();
     const h = 6.5;
+    const coat = mat('CERAMIC', 0x2f5fa8), skin = mat('CERAMIC', 0xe8b28c), white = mat('CERAMIC', 0xf0ece0);
+    const red = mat('CERAMIC', 0xc9302c), black = mat('CERAMIC', 0x2a241e), gold = mat('METAL_KITCHEN', 0xd8b04a);
     g.add(cylMesh(1.1, 0.5, mat('STONE', 0x7c7468), 0.25, 16)); // base
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.2, 2.6, 16), mat('CERAMIC', 0x2f5fa8)); // blue coat
+    // Boots peeking out under the coat
+    for (const x of [-0.42, 0.42]) {
+      const boot = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 8), black);
+      boot.scale.set(1, 0.6, 1.4);
+      boot.position.set(x, 0.62, 0.45);
+      boot.castShadow = true;
+      g.add(boot);
+    }
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.2, 2.6, 16), coat); // blue coat
     body.position.y = 0.5 + 1.3;
     body.castShadow = true;
     g.add(body);
-    const beard = new THREE.Mesh(new THREE.SphereGeometry(0.85, 14, 10), mat('CERAMIC', 0xf0ece0));
+    // Belt + brass buckle
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(1.08, 1.12, 0.32, 16), black);
+    belt.position.y = 2.05;
+    g.add(belt);
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.34, 0.08), gold);
+    buckle.position.set(0, 2.05, 1.08);
+    g.add(buckle);
+    // Arms folded over the belly, mittened hands
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.9, 4, 10), coat);
+      arm.rotation.z = side * 1.25;
+      arm.rotation.x = 0.35;
+      arm.position.set(side * 0.55, 2.75, 0.75);
+      arm.castShadow = true;
+      g.add(arm);
+    }
+    const hands = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), skin);
+    hands.scale.set(1.5, 0.8, 0.8);
+    hands.position.set(0, 2.6, 1.1);
+    g.add(hands);
+    const beard = new THREE.Mesh(new THREE.SphereGeometry(0.85, 14, 10), white);
     beard.scale.set(1, 1.3, 0.8);
     beard.position.set(0, 3.5, 0.35);
     beard.castShadow = true;
     g.add(beard);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 14, 10), mat('CERAMIC', 0xe8b28c));
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 14, 10), skin);
     head.position.y = 4.35;
     head.castShadow = true;
     g.add(head);
-    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.85, h - 4.7, 16), mat('CERAMIC', 0xc9302c));
+    // Face: eyes, brows, rosy cheeks, the nose
+    for (const x of [-0.24, 0.24]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), black);
+      eye.position.set(x, 4.48, 0.62);
+      g.add(eye);
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.1), white);
+      brow.rotation.z = x < 0 ? 0.25 : -0.25;
+      brow.position.set(x, 4.66, 0.6);
+      g.add(brow);
+      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), mat('CERAMIC', 0xe08a7a));
+      cheek.position.set(x * 1.6, 4.28, 0.5);
+      g.add(cheek);
+    }
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), mat('CERAMIC', 0xd9967a));
+    nose.position.set(0, 4.3, 0.7);
+    g.add(nose);
+    // Hat with a folded brim and a worn tip
+    const brim = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.14, 8, 18), red);
+    brim.rotation.x = Math.PI / 2;
+    brim.position.y = 4.78;
+    g.add(brim);
+    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.85, h - 4.7, 16), red);
     hat.position.y = 4.7 + (h - 4.7) / 2;
+    hat.rotation.z = 0.06;
     hat.castShadow = true;
     g.add(hat);
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), mat('CERAMIC', 0xd9967a));
-    nose.position.set(0, 4.3, 0.68);
-    g.add(nose);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), red);
+    tip.position.set(-0.1, h - 0.02, 0);
+    g.add(tip);
     return { mesh: g, colliders: [solid(2.2, 0.5, 2.2, 0.25), solid(1.9, 4.5, 1.9, 0.5 + 2.25)] };
   },
 });
@@ -601,6 +677,29 @@ reg({
     ped.position.y = 0.5 + 3.55;
     ped.castShadow = true;
     g.add(ped);
+    // Fluting: 10 half-round ridges down the pedestal; moulding rings top and bottom
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      const flute = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 6.2, 6), stone);
+      flute.position.set(Math.cos(a) * 0.96, 0.5 + 3.5, Math.sin(a) * 0.96);
+      g.add(flute);
+    }
+    for (const [y, r] of [[1.0, 1.2], [7.45, 1.05]] as [number, number][]) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.16, 8, 24), stone);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = y;
+      g.add(ring);
+    }
+    // Lichen patches
+    const lichen = mat('STONE', 0x8a9a5a);
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.7 + 0.4;
+      const patch = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 6), lichen);
+      patch.scale.set(1, 0.55, 0.25);
+      patch.position.set(Math.cos(a) * 1.02, 1.6 + i * 0.9, Math.sin(a) * 1.02);
+      patch.lookAt(0, patch.position.y, 0);
+      g.add(patch);
+    }
     const bowl = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.0, 1.0, 24), stone);
     bowl.position.y = 7.6 + 0.5;
     bowl.castShadow = true;
@@ -608,6 +707,16 @@ reg({
     g.add(bowl);
     const water = cylMesh(2.4, 0.04, mat('GLASS_CHEAP', 0x6aa0c8), 8.35, 24);
     g.add(water);
+    for (const r of [0.7, 1.4]) {
+      const ripple = new THREE.Mesh(new THREE.TorusGeometry(r, 0.02, 4, 32), mat('GLASS_CHEAP', 0xcfe8f8));
+      ripple.rotation.x = Math.PI / 2;
+      ripple.position.y = 8.38;
+      g.add(ripple);
+    }
+    const inner = new THREE.Mesh(new THREE.CylinderGeometry(2.55, 2.45, 0.3, 24, 1, true), stone);
+    (inner.material as THREE.Material).side = THREE.DoubleSide;
+    inner.position.y = 8.35;
+    g.add(inner);
     const rim = new THREE.Mesh(new THREE.TorusGeometry(2.7, 0.22, 10, 32), stone);
     rim.rotation.x = Math.PI / 2;
     rim.position.y = 8.55;
@@ -649,14 +758,88 @@ reg({
 
 reg({
   id: 'rubber_band',
-  dims: [0.5, 0.05, 0.5],
+  // Fern's trail marker: a band on the ground AND one hung on a twig, so the
+  // trail reads above over-head grass (playtest: the flat bands were invisible).
+  dims: [0.5, 1.7, 0.5],
   build() {
     const g = new THREE.Group();
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.03, 6, 20), mat('RUBBER_MATTE', 0xd9c26b));
+    const bandMat = mat('PLASTIC_TOY', 0xf2d86a, { emissive: 0x7a5a10 });
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 6, 20), bandMat);
     band.rotation.x = Math.PI / 2;
-    band.position.y = 0.03;
+    band.position.y = 0.04;
     g.add(band);
+    const twig = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 1.7, 6), mat('WOOD_WARM', 0x8a6a42));
+    twig.position.y = 0.85;
+    twig.rotation.z = 0.08;
+    twig.castShadow = true;
+    g.add(twig);
+    const hung = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 6, 18), bandMat);
+    hung.position.set(0.14, 1.52, 0);
+    hung.rotation.x = 0.35;
+    g.add(hung);
     return { mesh: g, colliders: [] };
+  },
+});
+
+reg({
+  // Kid's chalk arrow on the ground; points −z locally (yaw the instance).
+  id: 'chalk_arrow',
+  dims: [0.9, 0.02, 0.9],
+  build() {
+    const g = new THREE.Group();
+    const chalk = mat('PAPERBOARD', 0xf6f6f0);
+    g.add(boxMesh(0.16, 0.02, 0.9, chalk, 0.011));
+    for (const side of [-1, 1]) {
+      const wing = boxMesh(0.14, 0.02, 0.5, chalk, 0.011);
+      wing.rotation.y = side * 0.75;
+      wing.position.set(side * 0.18, 0.011, -0.32);
+      g.add(wing);
+    }
+    return { mesh: g, colliders: [] };
+  },
+});
+
+reg({
+  // The kid's bottle rocket: a soda bottle propped on a stone, a matchstick
+  // rocket in the neck, aimed at wherever the kid thought was funny. Hold E to
+  // light it and ride the stick. Points −z locally (yaw the instance at the target).
+  id: 'bottle_rocket',
+  dims: [1.0, 2.2, 1.6],
+  build() {
+    const g = new THREE.Group();
+    const glass = mat('GLASS_CHEAP', 0x6aa070);
+    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 1.3, 14), glass);
+    bottle.rotation.x = -1.05;
+    bottle.position.set(0, 0.5, 0.1);
+    bottle.castShadow = true;
+    g.add(bottle);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 0.5, 12), glass);
+    neck.rotation.x = -1.05;
+    neck.position.set(0, 0.5 + Math.cos(1.05) * 0.9, 0.1 - Math.sin(1.05) * 0.9);
+    g.add(neck);
+    const rock = cylMesh(0.42, 0.34, mat('STONE', 0x8d8a80), 0.17, 9);
+    rock.position.z = 0.45;
+    g.add(rock);
+    // Rocket on its stick, same axis as the bottle
+    const axis = new THREE.Vector3(0, Math.cos(1.05), -Math.sin(1.05));
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.2, 6), mat('WOOD_WARM', 0xe8d9b0));
+    stick.rotation.x = -1.05;
+    stick.position.set(0, 0.5, 0.1).addScaledVector(axis, 0.9);
+    g.add(stick);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.7, 10), mat('PAPERBOARD', 0xc93a3a));
+    body.rotation.x = -1.05;
+    body.position.set(0, 0.5, 0.1).addScaledVector(axis, 1.75);
+    body.castShadow = true;
+    g.add(body);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 10), mat('PLASTIC_TOY', 0x2f4fa8));
+    tip.rotation.x = -1.05;
+    tip.position.set(0, 0.5, 0.1).addScaledVector(axis, 2.25);
+    g.add(tip);
+    const fuse = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 5), mat('FABRIC_SOFT', 0x3a3a3a));
+    fuse.position.set(0.05, 0.5, 0.1).addScaledVector(axis, 1.35);
+    fuse.rotation.z = 0.8;
+    g.add(fuse);
+    return { mesh: g, colliders: [solid(0.9, 0.6, 1.1, 0.3, 0, 0.2)] };
   },
 });
 

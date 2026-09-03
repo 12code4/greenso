@@ -25,12 +25,17 @@ export function mat(family: Family, color: number, opts: { emissive?: number } =
       m = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
       break;
     case 'PLASTIC_TOY':
+      // Plastosheen 2.0: harder clearcoat, a touch of sheen for the fake-SSS
+      // glow injection-molded plastic has at grazing angles.
       m = new THREE.MeshPhysicalMaterial({
         color,
-        roughness: 0.32,
+        roughness: 0.3,
         metalness: 0,
-        clearcoat: 0.6,
-        clearcoatRoughness: 0.25,
+        clearcoat: 0.75,
+        clearcoatRoughness: 0.18,
+        sheen: 0.18,
+        sheenColor: new THREE.Color(0xffffff),
+        sheenRoughness: 0.6,
         emissive: opts.emissive ?? 0,
         emissiveIntensity: 0.6,
       });

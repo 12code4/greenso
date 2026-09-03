@@ -60,3 +60,16 @@ Keep from SH: one hue per army + unified gloss; helmet-topped neckless silhouett
 - Gates: `combat.mjs` (Jungle 4/4 cleared), new `firepower.mjs` (flamer melts ≥1, bazooka kills ≥1), `mission.mjs` end to end.
 
 Deferred to Update 3: the perception overhaul (still the biggest fairness issue), checkpoints per objective.
+
+### Update 2 — TOY SOLDIERS (shipped 2026-09-02)
+
+*Less minimal geometry, more stylized toys turned soldiers.* Graphics pass per §3.
+
+- **Soldier Model v2** (`src/game/soldier.ts`): helmet-topped **neckless** silhouette (face sinks into the torso), barrel torso with no waist and ball shoulders, tubular arms with ball hands, straight legs with **boot flares and flat soles**, a **molded seam line** down each side, and gear as geometry — belt, two pouches, canteen, grenade on a chest strap. Helmet has a brim and chin strap. **Animated eyes**: whites + pupils that blink every few seconds and glance around (snapped, like everything else). Based Tans stand on an **oval base with a pour mark**. The helmet always survives a shatter and rolls away.
+- **Weapon = pose**: the held prop and the hold change together. Rifle (stock, mag, sight), cap pistol one-handed, rubber-band sniper as a wooden ruler with a stretched band and a bottle-cap scope, flamethrower wand with a red candle-fuel tank on the back and a hose, bazooka as a cardboard tube on the shoulder with a matchstick rocket peeking out. Idle / run / aim / kneel holds per weapon. Officers carry the pistol, prone snipers the ruler.
+- **Tan legibility**: Tan pushed to a cooler, lighter beige (0xdccaa2) and every soldier material carries a **sheen term** as the fake rim/SSS — Tans glow at grazing angles against wood and dry grass.
+- **Plastosheen 2.0** (`materials.ts`): harder clearcoat (0.75 / 0.18), a little sheen on every toy-plastic prop.
+- **Prop detail pass**: the gnome got boots, a belt and brass buckle, folded arms and mittens, eyes, brows, rosy cheeks, a folded hat brim and worn tip; the birdbath got a fluted pedestal, moulding rings, lichen, an inner bowl wall and ripples on the water; the race track got grooves and joiner tabs; the popsicle barricades got rounded tips and twine lashing; grass blades carry a per-blade tint with one in twelve sun-bleached.
+- **Stencil HUD**: objective, weapon, toasts and the briefing subtitle are stenciled ammo-crate labels (olive drab, dashed inner border, cream Impact-stack lettering, a degree off level); the melt meter is notched; the radio card carries the same olive stripe.
+
+Deferred: a pose-snap **weapon-switch flourish** and an aim-down-sights hand pose; brand-art label textures on more props (only the cereal/juice boxes have wordmarks so far).

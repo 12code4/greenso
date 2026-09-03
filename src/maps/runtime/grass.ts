@@ -90,6 +90,7 @@ export class GrassField {
       const q = new THREE.Quaternion();
       const s = new THREE.Vector3();
       const p = new THREE.Vector3();
+      const col = new THREE.Color();
       for (let i = 0; i < count; i++) {
         p.set(rand(box.min.x, box.max.x), box.min.y, rand(box.min.z, box.max.z));
         q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.random() * Math.PI);
@@ -97,8 +98,15 @@ export class GrassField {
         s.set(rand(0.8, 1.3), h, rand(0.8, 1.3));
         m.compose(p, q, s);
         mesh.setMatrixAt(i, m);
+        // Per-blade tint: most blades jitter around the base green, one in twelve is sun-bleached
+        const bleached = Math.random() < 0.08;
+        const k = rand(0.78, 1.12);
+        if (bleached) col.setRGB(1.35, 1.2, 0.62);
+        else col.setRGB(k * rand(0.94, 1.06), k, k * rand(0.88, 1.0));
+        mesh.setColorAt(i, col);
       }
       mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.receiveShadow = true;
       mesh.frustumCulled = false;
       scene.add(mesh);

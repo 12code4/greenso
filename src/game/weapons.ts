@@ -5,6 +5,7 @@
 // a generous cone, and the HUD shows WHICH target is locked.
 
 import * as THREE from 'three';
+import { SoldierModel, HeldWeapon } from './soldier';
 import { CollisionWorld } from '../sim/collision';
 import { Input } from '../core/input';
 import { ThirdPersonCamera } from './camera';
@@ -45,6 +46,8 @@ export interface ShotStats { shots: number; hits: number }
 export interface MuzzleSource {
   muzzleWorld(out: THREE.Vector3): THREE.Vector3;
   pos: THREE.Vector3;
+  /** Weapon = pose: the soldier model swaps held prop + hold on switch. */
+  model?: SoldierModel;
 }
 
 export class Weapons {
@@ -127,9 +130,18 @@ export class Weapons {
     this.firingFlame = false;
   }
 
+  /** Weapon = pose (docs/09 §3): the soldier model swaps its held prop and hold. */
+  private syncHeld(): void {
+    const model = this.source.model;
+    if (!model) return;
+    const held: HeldWeapon = this.current.id === 'cap' ? 'pistol' : this.current.id;
+    if (model.weapon !== held) model.setWeapon(held);
+  }
+
   // ------------------------------------------------------------ update
 
   update(dt: number, input: Input, cam: ThirdPersonCamera, aiming: boolean, hittables: Hittable[]): void {
+    this.syncHeld();
     this.cooldown -= dt;
     if (input.pressed('Digit1')) this.switchTo('rifle');
     if (input.pressed('Digit2')) this.switchTo('cap');
