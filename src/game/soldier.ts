@@ -12,7 +12,19 @@ import { mat } from '../maps/kit/materials';
 import { rand } from '../core/math';
 
 export type Team = 'green' | 'tan';
-export type PoseName = 'idle' | 'runA' | 'runB' | 'aim' | 'throw' | 'kneel' | 'prone' | 'glued';
+export type PoseName = 'idle' | 'runA' | 'runB' | 'runC' | 'runD' | 'aim' | 'throw' | 'kneel' | 'prone' | 'glued';
+
+/** Run cycle keyframes: leg L/R, arm L/R (x rotations), torso pitch, bob. Contact → passing → contact → passing. */
+interface RunFrame { legL: number; legR: number; armL: number; armR: number; torso: number; bob: number; }
+const RUN_FRAMES: RunFrame[] = [
+  { legL: 0.75, legR: -0.75, armL: -0.9, armR: -0.2, torso: 0.12, bob: 0.03 }, // runA: left foot forward, contact
+  { legL: 0.1, legR: -0.25, armL: -0.55, armR: -0.4, torso: 0.16, bob: 0.07 }, // runC: passing, legs under, body high
+  { legL: -0.75, legR: 0.75, armL: -0.2, armR: -0.9, torso: 0.12, bob: 0.03 }, // runB: right foot forward, contact
+  { legL: -0.25, legR: 0.1, armL: -0.4, armR: -0.55, torso: 0.16, bob: 0.07 }, // runD: passing
+];
+const RUN_POSES: PoseName[] = ['runA', 'runC', 'runB', 'runD'];
+/** How far a held frame drifts toward the next before the snap (0 = frozen frames, 1 = smooth). */
+const RUN_DRIFT = 0.22;
 export type DeathKind = 'shatter' | 'melt';
 export type HeldWeapon = 'rifle' | 'pistol' | 'sniper' | 'flamer' | 'bazooka';
 
@@ -366,18 +378,14 @@ export class SoldierModel {
       case 'idle':
         this.holdRelaxed();
         break;
-      case 'runA':
-        L.rotation.x = 0.75; R.rotation.x = -0.75;
-        AL.rotation.x = -0.9; AR.rotation.x = -0.2;
-        T.rotation.x = 0.12; H.rotation.x = 0.1; B.position.y += 0.03;
+      case 'runA': case 'runB': case 'runC': case 'runD': {
+        const f = RUN_FRAMES[RUN_POSES.indexOf(p)];
+        L.rotation.x = f.legL; R.rotation.x = f.legR;
+        AL.rotation.x = f.armL; AR.rotation.x = f.armR;
+        T.rotation.x = f.torso; H.rotation.x = 0.1; B.position.y += f.bob;
         this.holdRun();
         break;
-      case 'runB':
-        L.rotation.x = -0.75; R.rotation.x = 0.75;
-        AL.rotation.x = -0.2; AR.rotation.x = -0.9;
-        T.rotation.x = 0.12; H.rotation.x = 0.1; B.position.y += 0.03;
-        this.holdRun();
-        break;
+      }
       case 'aim':
         L.rotation.x = 0.18; R.rotation.x = -0.18;
         this.holdAim();
@@ -482,11 +490,20 @@ export class SoldierModel {
     if (this.opts.based || this.opts.prone) return;
     if (moving) {
       this.snapClock += dt;
-      if (this.snapClock >= 1 / SNAP_FPS) {
+      if (this.snapClock >= 1 / SNAP_FPS || !RUN_POSES.includes(this.pose)) {
         this.snapClock = 0;
-        this.runFrame ^= 1;
-        this.setPose(this.runFrame ? 'runA' : 'runB');
+        this.runFrame = (this.runFrame + 1) % RUN_FRAMES.length;
+        this.setPose(RUN_POSES[this.runFrame]);
       }
+      // Drift: the held frame creeps a fifth of the way toward the next frame, so it reads molded but alive
+      const k = Math.min(1, this.snapClock * SNAP_FPS) * RUN_DRIFT;
+      const a = RUN_FRAMES[this.runFrame], b = RUN_FRAMES[(this.runFrame + 1) % RUN_FRAMES.length];
+      this.legL.rotation.x = a.legL + (b.legL - a.legL) * k;
+      this.legR.rotation.x = a.legR + (b.legR - a.legR) * k;
+      this.armL.rotation.x = a.armL + (b.armL - a.armL) * k;
+      this.armR.rotation.x = a.armR + (b.armR - a.armR) * k;
+      this.torso.rotation.x = a.torso + (b.torso - a.torso) * k;
+      this.body.position.y = (this.opts.based ? 0.06 : 0) + a.bob + (b.bob - a.bob) * k;
     } else if (aiming) {
       if (this.pose !== 'aim') this.setPose('aim');
     } else if (this.pose !== 'idle' && this.pose !== 'throw' && this.pose !== 'kneel') {

@@ -1,5 +1,7 @@
 # 03 — The Map Bible
 
+> **Superseded as world structure (2026-09-03):** the eight campaign maps below now live inside one house; see [`docs/10-house-atlas.md`](10-house-atlas.md). The scale fantasy, the seven laws and the encounter grammar in this document still bind.
+
 **This is the game's center of gravity.** Everything else in the plan exists to make these spaces playable. The brief from the studio: maps that are creative, thoughtfully crafted, and *encapsulate childhood fun*. This document is the contract for what that means in practice.
 
 ## Scale: the one number everything hangs on

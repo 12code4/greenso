@@ -378,6 +378,7 @@ export class EnemyManager implements Hittable {
 
   update(dt: number, player: PlayerView, concealmentAt: (p: THREE.Vector3) => number): void {
     this.time += dt;
+    this.fx.update(dt); // tracers, sparks, flashes, flame puffs age out (playtest: Tan tracers lingered forever)
     for (let i = this.list.length - 1; i >= 0; i--) {
       const e = this.list[i];
       if (!e.alive) {

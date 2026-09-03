@@ -39,7 +39,7 @@ What's in the build:
 3. **FAIR PLAY** — the awareness ladder (view cone, distance, stance, grass; "Huh?" before "Green!"), first-shot grace, sentries that scan, Olive's radio pin + compass strip in inches, visible trail markers and chalk arrows, a checkpoint on every objective, dive-tackle, minimal options.
 4. **HEROES & CONTENT** — Pvt. Sprout the squadmate, Gen. Taupe's ham-radio taunts, the Tan Flamer (stop-drop-roll to put yourself out; his tank blows), a convoy reinforcement wave, battery-crate sabotage as a secondary objective, a bottle-rocket launch to the birdbath as a second route, mission select — and the sprint-dive, documented since M0, finally works.
 
-Not yet: a stranger finishing hint-free (the M2 exit test, now plausible), real-GPU perf numbers, gamepad, saves, the Sandbox tutorial map.
+**Second hands-on (PM, 2026-09-03):** the sprint-dive and the movement animation land; two fixes followed (Tan tracers no longer linger; the run cycle is four molded frames that drift a fifth of the way toward the next before each snap). The bigger verdict: the Backyard is too small, fully explorable before the first objective. The answer is a new world plan, [`docs/10-house-atlas.md`](docs/10-house-atlas.md): one house at honest scale, four floors plus the yard, two main missions per floor, side quests in the rooms, Tans that patrol between landmarks. The slice becomes a prototype (archived in [`archive/builds/`](archive/builds/)); the yard gets rebuilt into the house. Waiting on the PM: the story pick (three pitches in the atlas §10) and the secrets review ([`docs/11`](docs/11-secrets-for-review.md)).
 
 ### Run it
 
@@ -67,7 +67,10 @@ In-game: **H** controls · **[ ]** sensitivity · **I** invert Y · **M** mute �
 | [`docs/07-household-kit.md`](docs/07-household-kit.md) | The prop catalog with honest dimensions and affordances |
 | [`docs/blueprints/`](docs/blueprints/) | One construction contract per campaign map (all 8) |
 | [`docs/08-three-updates.md`](docs/08-three-updates.md) | The first post-playtest plan: diagnosis of the hands-on (guidance, perception, honesty), the as-built walkthrough, three themed update sets. Superseded where docs/09 differs |
-| [`docs/09-sarges-heroes-study.md`](docs/09-sarges-heroes-study.md) | **The soul study and the plan of record.** Ten principles of what made *Sarge's Heroes* fun, the gap table against our slice, the graphics direction ("stylized toys turned soldiers"), the four updates, and the ship log |
+| [`docs/09-sarges-heroes-study.md`](docs/09-sarges-heroes-study.md) | The soul study: ten principles of what made *Sarge's Heroes* fun, the gap table against the slice, the graphics direction, the four updates and their ship log |
+| [`docs/10-house-atlas.md`](docs/10-house-atlas.md) | **The world plan.** One house at honest 1:32 scale: basement, ground floor, upper floor, attic, and the yard as a fifth zone. Floor plans, room tables, the routes between floors, two main missions per floor, patrol/defense/pocket population, the Decoration With Heart standard, data-model deltas, three story pitches, production order |
+| [`docs/11-secrets-for-review.md`](docs/11-secrets-for-review.md) | Fifty candidate secrets (era and game homages, all original), one table for the PM to mark keep / cut / change |
+| [`archive/builds/`](archive/builds/) | Every shipped single-file build, dated and tagged |
 
 ## Studio context
 

@@ -105,3 +105,9 @@ Deferred: the awareness icon over heads (the bark carries it for now), gamepad, 
 - Gate: new `heroes.mjs` (Sprout joins, crate sabotaged, rocket lands on the rim, flamer burns and a dive extinguishes, wave arrives at 16 s).
 
 Deferred to the next round: a Sprout revive/downed state, the tilting-truck set piece and the Sandbox tutorial map (blueprint 01 is the cheapest next map on this kit), brand-art labels, gamepad.
+
+---
+
+## 6. After the four updates
+
+The PM's second hands-on (2026-09-03) confirmed the direction and moved the goalposts: the fun is closer, the *world* is too small. The plan of record for what comes next is [`docs/10-house-atlas.md`](10-house-atlas.md): one house at honest scale, the Backyard slice retired to `archive/builds/`.

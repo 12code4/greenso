@@ -1,5 +1,7 @@
 # Blueprints — the map construction contracts
 
+> **Superseded (2026-09-03):** these eight per-map contracts are retired as world structure; the places they describe become rooms and zones of the house in [`docs/10-house-atlas.md`](../10-house-atlas.md). Per-floor blueprints (`floor-B.md`, `floor-G.md`, …) replace them; the skeleton below still applies to those.
+
 One file per campaign map. A blueprint freezes a map's **topology, dimensions, encounters, hazards, kit manifest, and mission logic** at P0 (see docs/06 §7) so that construction passes P1–P6 are transcription and tuning, never design. Region/route/encounter IDs here are the IDs the map def must use (traceability rule, 06 §3).
 
 Every blueprint follows the same skeleton:
