@@ -554,7 +554,7 @@ reg({
     colliders.push(solid(w, h, 0.4, h / 2, 0, d / 2 - 0.2));
     const gap = 5.5;
     const boards: number[] = [];
-    for (let y = 0.4; y <= h - 0.3 - gap + 0.01; y += gap) boards.push(y);
+    for (let y = 0.4; y <= h - 0.3 - 3.0; y += gap) boards.push(y); // every regular board that leaves ≥ 3 u (two hops) under the top
     boards.push(h - 0.3); // top board
     const hole = 4;
     for (let k = 0; k < boards.length; k++) {
@@ -614,7 +614,7 @@ reg({
 reg({
   id: 'fireplace',
   // Brick fireplace with a stone hearth, a mantel at 20 and a chimney breast to the ceiling (size.y).
-  // The stones on the left cheek step up 1.2 at a time: the climb to the mantel.
+  // The stones on the left cheek step up 1.0 at a time: the climb to the mantel (hops, not steps).
   dims: [28, 96, 8],
   walkableTop: true,
   cover: 'BW',
@@ -648,20 +648,20 @@ reg({
     // Stone ledges out of the left cheek's outer face (1.2 risers, 1.6 treads), zig-zagging front → back → front
     // so the climb stays on the cheek; the top ledge is one auto-step under the mantel. 5.2 deep, so you stand
     // clear of the mantel's underside. A "hard" climb: jumps, not steps.
-    // 6 + 6 + 3 ledges over local z −6..2 (the last 1.6 u of the breast sits inside the wall behind it)
+    // 1.0 risers, 1.25 treads, 7 + 7 + 4 ledges over local z −6..1.5 (the breast's last 1.6 u sit inside the wall).
+    // Each pass turns two treads back, so every slab is at least 2 u under the next one above it (head room).
     const zs: number[] = [];
-    for (let k = 0; k < 6; k++) zs.push(-6 + 1.6 * k);
-    for (let k = 0; k < 6; k++) zs.push(0.4 - 1.6 * k);
-    for (let k = 0; k < 3; k++) zs.push(-6 + 1.6 * k);
+    for (let k = 0; k < 7; k++) zs.push(-6 + 1.25 * k);
+    for (let k = 0; k < 7; k++) zs.push(-1 - 1.25 * k);
+    for (let k = 0; k < 4; k++) zs.push(-6 + 1.25 * k);
     let y = 3;
     for (const z of zs) {
-      if (y >= 20) break;
-      const ledge = boxMesh(5.2, 1.2, 1.8, stone, y + 0.6);
-      ledge.position.set(-w / 2 - 2.6, y + 0.6, z);
+      const ledge = boxMesh(5.2, 1.0, 1.8, stone, y + 0.5);
+      ledge.position.set(-w / 2 - 2.6, y + 0.5, z);
       ledge.rotation.y = (Math.random() - 0.5) * 0.06;
       g.add(ledge);
-      colliders.push(solid(5.2, 1.2, 1.8, y + 0.6, -w / 2 - 2.6, z)); // a slab, not a column: the return pass hangs over the first
-      y += 1.2;
+      colliders.push(solid(5.2, 1.0, 1.8, y + 0.5, -w / 2 - 2.6, z)); // a slab, not a column: the return pass hangs over the first
+      y += 1.0;
     }
     // Andirons and a log
     const log = cylMesh(1.2, w - 18, mat('WOOD_WARM', 0x5a3a22), 4.2, 8);
