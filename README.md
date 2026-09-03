@@ -49,7 +49,9 @@ What's in the build:
 npm install
 npm run dev            # → http://127.0.0.1:5173  (add ?map=kittest for the range)
 npm run build          # typecheck + bundle to dist/
-npm run preview -- --port 4173 && node tools/walk.mjs backyard   # P1 gate
+npm run preview -- --port 4173 && node tools/walk.mjs g   # P1 gate on the ground floor
+node tools/tour.mjs g /tmp/shots                            # photo tour of the rooms
+node tools/house-g.mjs                                      # G1 + G2 mission gate
 ```
 
 In-game: **H** controls · **[ ]** sensitivity · **I** invert Y · **M** mute · **F8** free-cam · **P** log position (for transcribing blueprint coordinates) · **F9** region overlay.

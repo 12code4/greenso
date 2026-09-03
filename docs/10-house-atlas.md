@@ -24,6 +24,10 @@
 | 12 | **New story.** The battery-drawer war is dropped; the PM wants something different. Three pitches in §10; the atlas is written to work with any of them. |
 | 13 | This document (not a "bible"). Blueprints per floor follow it. |
 | 14 | Target 60 fps eventually, but **performance is not a concern at this stage**. Honest scale first. |
+| 15 | **Story: BOXED** (§10, Pitch 1). Decided 2026-09-03. |
+| 16 | **Secrets: all fifty approved** as written in docs/11. |
+| 17 | **The yard gets one main mission plus side quests**, not two mains. |
+| 18 | **Build the house first**, and build it well; the yard rebuild comes after the four floors. |
 
 ---
 
@@ -230,7 +234,7 @@ The first mission of each floor **gates the next floor**: it ends by finding and
 |---|---|---|---|---|
 | **B** | *Out of the Box*: wake in THE BOX on shelf 3, get down the shelf cliffs, cross the rec room, reach the laundry, rig the chute. | storage → rec → laundry (≈ 260 u) | *The Armory*: raid the Tan workbench, steal the vise key, free Doc Pickle from the jar of screws. | The train loop: ride it under fire; the dryer starts. |
 | **G** | *The Long Hall*: arrive from the chute, cross the kitchen counter to the junk drawer for the string, cross the living room, open the stairs (marble run). | kitchen → dining → living → hall (≈ 400 u) | *Open House*: the dog door. Find Biscuit's route, survive his passes, get the flap open. Unlocks Y. | Biscuit crossing the living room; the fridge door opening onto the counter. |
-| **Y** | *The Green Sea* rebuilt: the gnome, Fern, the convoy, the leaf. | back → bed → side (≈ 500 u) | *Basic Draining*: the sandbox raid (docs/03 map 1). | Sprinkler cycle, the gutter run. |
+| **Y** | *The Green Sea* rebuilt: the gnome, Fern, the convoy, the leaf. | back → bed → side (≈ 500 u) | (none: decision 17) side quests only — the sandbox raid becomes `SQ_sandbox`, the gutter run `SQ_gutter`. | Sprinkler cycle. |
 | **U** | *Up the Ladder*: cross the landing under sniper fire, through the parents' room, find the attic ladder's loops in the linen closet. | landing → parents → hall (≈ 350 u) | *Dollhouse Rules*: take the dollhouse (the Tan HQ on this floor) and hold it; then the bathtub navy. | The dollhouse room-by-room fight; the tub with a running tap. |
 | **A** | *The Top of the World*: cross the attic on the ridge beam, through the holiday lights, to THE BOX '62. | hatch → west → ridge → toys (≈ 280 u) | *Taupe's Court*: the finale under the window. | Rocking horse platform; the lights as a hazard; the window's light. |
 
@@ -305,7 +309,7 @@ Invented brands only (docs/01). Props at honest dimensions (docs/07). If a room 
 
 The battery-drawer war is dropped (decision 12). All three keep the cast (docs/01) and the Analog-vs-Powered *flavor* only as texture, not plot.
 
-**Pitch 1 — BOXED** *(recommended).* Saturday morning the Greens wake in a taped box on a basement shelf, labeled for the church rummage sale next weekend. Jonah is ten; he didn't fight it. Mission: get back upstairs and back into the kids' lives before the box goes out the door. The Tans were boxed too, and Field Marshal Taupe has drawn the opposite conclusion: if the family is done with toys, the house belongs to the toys, and he intends to run it from the attic. Each floor is a rung back toward the kids' rooms; the flavor missions are the Greens making themselves *worth keeping* (fixing the train, straightening the photo, winning Pip's tea party). The finale in the attic is at THE BOX '62, the Greens' own first box, which Taupe has made his throne. Heart, camp, a ticking week, and a reason to climb. Ending beat: Pip finds one Green on her pillow Monday morning.
+**Pitch 1 — BOXED** *(CHOSEN, 2026-09-03).* Saturday morning the Greens wake in a taped box on a basement shelf, labeled for the church rummage sale next weekend. Jonah is ten; he didn't fight it. Mission: get back upstairs and back into the kids' lives before the box goes out the door. The Tans were boxed too, and Field Marshal Taupe has drawn the opposite conclusion: if the family is done with toys, the house belongs to the toys, and he intends to run it from the attic. Each floor is a rung back toward the kids' rooms; the flavor missions are the Greens making themselves *worth keeping* (fixing the train, straightening the photo, winning Pip's tea party). The finale in the attic is at THE BOX '62, the Greens' own first box, which Taupe has made his throne. Heart, camp, a ticking week, and a reason to climb. Ending beat: Pip finds one Green on her pillow Monday morning.
 
 **Pitch 2 — LOST AND FOUND.** Things go missing in this house: socks, the remote, Pip's favorite Green medic (Doc Pickle), a house key. Taupe is hoarding the house's lost things in the attic to hold the family "hostage" in the only way a toy can. The campaign is a recovery up through the floors; every side quest returns something to where it belongs; the lost-and-found box in the attic is the finale. Simple, very Chibi-Robo, slightly less personal.
 
@@ -327,9 +331,8 @@ Old builds: every shipped `plastic-platoon.html` is copied to `archive/builds/YY
 
 ## 12. Open PM decisions
 
-1. Story: Pitch 1, 2 or 3 (or a fourth).
-2. The yard: two main missions like a floor, or one main plus side quests?
-3. Kid names and pets: Jonah, Pip, Biscuit, Duchess — keep or change.
-4. Neutral factions: how much do they talk? (Barks only, or short dialogue cards.)
-5. Difficulty philosophy (still open from docs/08).
-6. Title (still open).
+Resolved 2026-09-03: story (BOXED), secrets (all fifty), the yard (one main + side quests), build order (house first). Names Jonah, Pip, Biscuit, Duchess stand until changed.
+
+1. Neutral factions: how much do they talk? (Barks only, or short dialogue cards.)
+2. Difficulty philosophy (still open from docs/08).
+3. Title (still open).

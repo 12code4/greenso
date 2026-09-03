@@ -51,6 +51,25 @@ export function groundTexture(kind: string): THREE.CanvasTexture {
       return noiseTexture('stone', [150, 146, 136], 30);
     case 'planks':
       return plankTexture();
+    case 'hardwood':
+      return plankTexture();
+    case 'tile':
+      return noiseTexture('tile', [232, 226, 210], 10, (g) => {
+        g.strokeStyle = 'rgba(120, 110, 95, 0.55)';
+        g.lineWidth = 3;
+        for (let i = 0; i <= 256; i += 128) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); }
+      });
+    case 'carpet':
+      return noiseTexture('carpet', [150, 70, 62], 34, (g) => {
+        g.fillStyle = 'rgba(60, 20, 18, 0.25)';
+        for (let i = 0; i < 400; i++) g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+      });
+    case 'concrete':
+      return noiseTexture('concrete', [154, 150, 144], 26, (g) => {
+        g.strokeStyle = 'rgba(70, 66, 60, 0.4)';
+        g.lineWidth = 2;
+        g.beginPath(); g.moveTo(0, 128); g.lineTo(256, 128); g.stroke();
+      });
     default:
       return noiseTexture('flat', [160, 150, 130], 20);
   }
@@ -111,7 +130,8 @@ export interface ShellRuntime {
   baseGroundKind: string;
 }
 
-export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWorld, baseGround: string): ShellRuntime {
+export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWorld, baseGround: string, indoor = false): ShellRuntime {
+  if (indoor) scene.background = new THREE.Color(def.fog.color);
   // Sky dome
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(380, 24, 12), // inside the camera's 400 far plane
@@ -125,7 +145,7 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
     }),
   );
   sky.frustumCulled = false;
-  scene.add(sky);
+  if (!indoor) scene.add(sky);
   scene.fog = new THREE.Fog(def.fog.color, def.fog.near, def.fog.far);
 
   const sun = new THREE.DirectionalLight(def.sun.color, def.sun.intensity);
@@ -147,7 +167,7 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
 
   // Base ground plane
   const gtex = groundTexture(baseGround);
-  gtex.repeat.set(baseGround === 'planks' ? 16 : 40, baseGround === 'planks' ? 16 : 40);
+  gtex.repeat.set(baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40, baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40);
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ map: gtex, roughness: 0.9 }));
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
@@ -165,7 +185,8 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
     } else {
       const t = groundTexture(z.kind).clone();
       t.needsUpdate = true;
-      t.repeat.set(size.x / 6, size.z / 6);
+      const cell = z.kind === 'tile' ? 12 : z.kind === 'carpet' ? 20 : 6;
+      t.repeat.set(size.x / cell, size.z / cell);
       material = new THREE.MeshStandardMaterial({ map: t, roughness: 0.92, color: z.color ?? 0xffffff });
     }
     const slab = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);
@@ -184,7 +205,26 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
     world.addBox(center, size);
     if (m.kind === 'fence') buildFence(scene, min, max, m.color ?? 0xd8cfb8);
     else if (m.kind === 'siding') buildSiding(scene, min, max, m.color ?? 0xe8e0cc);
-    else {
+    else if (m.kind === 'wall') buildWall(scene, min, max, m.color ?? 0xf0e8d6);
+    else if (m.kind === 'ceiling') {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), new THREE.MeshStandardMaterial({ color: m.color ?? 0xf6f2ea, roughness: 0.95 }));
+      mesh.position.copy(center);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    } else if (m.kind === 'slab') {
+      const t = groundTexture('hardwood').clone();
+      t.needsUpdate = true;
+      t.repeat.set(size.x / 6, size.z / 6);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, color: m.color ?? 0xffffff }));
+      mesh.position.copy(center);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    } else if (m.kind === 'glass') {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), mat('GLASS_CHEAP', m.color ?? 0xcfe4f4));
+      mesh.position.copy(center);
+      scene.add(mesh);
+    } else {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), mat('FABRIC_SOFT', m.color ?? 0x5c4a38));
       mesh.position.copy(center);
       mesh.castShadow = true;
@@ -203,6 +243,28 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
   world.addBox(new THREE.Vector3((bmin.x + bmax.x) / 2, H / 2, bmax.z + 1), new THREE.Vector3(bmax.x - bmin.x + 4, H, 2));
 
   return { sun, baseGroundKind: baseGround };
+}
+
+/** Painted drywall with a baseboard and a crown band; the classic 90s cream. */
+function buildWall(scene: THREE.Scene, min: THREE.Vector3, max: THREE.Vector3, color: number): void {
+  const size = new THREE.Vector3().subVectors(max, min);
+  const center = new THREE.Vector3().addVectors(min, max).multiplyScalar(0.5);
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), new THREE.MeshStandardMaterial({ color, roughness: 0.92 }));
+  wall.position.copy(center);
+  wall.receiveShadow = true;
+  wall.castShadow = true;
+  scene.add(wall);
+  if (min.y > 1) return; // upper segments (over doors) get no trim
+  const alongX = size.x > size.z;
+  const trim = mat('WOOD_WARM', 0x8a6a48);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(alongX ? size.x + 0.2 : size.x + 0.6, 1.7, alongX ? size.z + 0.6 : size.z + 0.2), trim);
+  base.position.set(center.x, min.y + 0.85, center.z);
+  scene.add(base);
+  if (size.y > 30) {
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(alongX ? size.x + 0.2 : size.x + 0.5, 1.0, alongX ? size.z + 0.5 : size.z + 0.2), new THREE.MeshStandardMaterial({ color: 0xfaf6ee, roughness: 0.9 }));
+    crown.position.set(center.x, max.y - 0.5, center.z);
+    scene.add(crown);
+  }
 }
 
 function buildFence(scene: THREE.Scene, min: THREE.Vector3, max: THREE.Vector3, color: number): void {

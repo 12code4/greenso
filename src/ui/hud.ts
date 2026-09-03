@@ -38,6 +38,8 @@ export class Hud {
   private overlayBody: HTMLDivElement;
   private tally: HTMLDivElement;
   private toastEl: HTMLDivElement;
+  private cardEl: HTMLDivElement;
+  private cardTimer = 0;
   private perfCanvas: HTMLCanvasElement;
   private perfText: HTMLDivElement;
   private help: HTMLDivElement;
@@ -114,6 +116,8 @@ export class Hud {
 
     this.toastEl = el('div', 'toast', root);
     this.toastEl.style.display = 'none';
+    this.cardEl = el('div', 'card', root);
+    this.cardEl.style.display = 'none';
 
     this.overlay = el('div', 'overlay', root);
     this.overlayBody = el('div', 'overlay-body', this.overlay);
@@ -129,7 +133,7 @@ export class Hud {
     this.overlay.style.display = visible ? 'flex' : 'none';
   }
 
-  setBriefing(title: string, subtitle: string, lines: string[], missions: { id: string; title: string; sub: string; current: boolean }[] = []): void {
+  setBriefing(title: string, subtitle: string, lines: string[], missions: { href: string; title: string; sub: string; current: boolean }[] = []): void {
     this.overlayBody.innerHTML =
       `<div class="title">${title}</div>` +
       (subtitle ? `<div class="sub">${subtitle}</div>` : '') +
@@ -137,7 +141,7 @@ export class Hud {
       '<div class="deploy">CLICK TO DEPLOY</div>' +
       '<div class="controls">WASD + mouse · Shift sprint · Space jump · RMB aim · LMB fire · G grenade · E interact · H all controls</div>' +
       (missions.length > 1
-        ? `<div class="missions">${missions.map((m) => `<a class="mission${m.current ? ' current' : ''}" href="?map=${m.id}"><b>${m.title}</b><span>${m.sub}</span></a>`).join('')}</div>`
+        ? `<div class="missions">${missions.map((m) => `<a class="mission${m.current ? ' current' : ''}" href="${m.href}"><b>${m.title}</b><span>${m.sub}</span></a>`).join('')}</div>`
         : '');
   }
 
@@ -235,6 +239,13 @@ export class Hud {
     this.radioEl.style.display = 'block';
   }
 
+  /** The toy-bin card: a full-screen stencil label for floor transitions. seconds ≤ 0 keeps it up. */
+  showCard(title: string, sub: string, seconds = 2.5): void {
+    this.cardEl.innerHTML = `<div class="card-title">${title}</div><div class="card-sub">${sub}</div>`;
+    this.cardEl.style.display = 'flex';
+    this.cardTimer = seconds > 0 ? seconds : 1e9;
+  }
+
   setBurning(on: boolean): void {
     this.vignette.classList.toggle('burning', on);
   }
@@ -272,6 +283,7 @@ export class Hud {
         if (next) this.radio(next.speaker, next.text, next.seconds, next.tone);
       }
     }
+    if (this.cardTimer > 0) { this.cardTimer -= dt; if (this.cardTimer <= 0) this.cardEl.style.display = 'none'; }
     if (this.toastTimer > 0) {
       this.toastTimer -= dt;
       if (this.toastTimer <= 0) this.toastEl.style.display = 'none';
@@ -368,6 +380,9 @@ const CSS = `
 .hint { position: absolute; left: 16px; bottom: 12px; font-size: 11px; opacity: 0.6; }
 .help { position: absolute; left: 16px; bottom: 34px; font-size: 12px; line-height: 1.7; background: rgba(20,16,10,0.72); padding: 12px 16px; border-radius: 6px; }
 .toast { position: absolute; right: 16px; bottom: 16px; font-family: var(--stencil); text-transform: uppercase; letter-spacing: 2px; font-size: 13px; text-shadow: none; background: var(--olive); color: var(--cream); padding: 8px 14px; border: 2px dashed rgba(239,228,198,0.5); outline: 3px solid var(--olive); border-radius: 2px; transform: rotate(-0.8deg); box-shadow: 0 3px 0 var(--olive-dk); }
+.card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--olive); color: var(--cream); z-index: 5; }
+.card-title { font-family: var(--stencil); text-transform: uppercase; font-size: 54px; letter-spacing: 10px; border: 3px dashed rgba(239,228,198,0.55); padding: 14px 34px; transform: rotate(-1.5deg); }
+.card-sub { margin-top: 18px; font-family: var(--stencil); text-transform: uppercase; font-size: 16px; letter-spacing: 4px; opacity: 0.85; }
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(24,19,11,0.6); backdrop-filter: blur(2px); }
 .overlay-body { display: flex; flex-direction: column; align-items: center; max-width: 720px; text-align: center; }
 .overlay .title { font-family: var(--stencil); font-size: 58px; letter-spacing: 8px; color: #a8d47a; text-shadow: 0 3px 0 #3a5a28, 0 6px 16px rgba(0,0,0,0.5); transform: rotate(-1.5deg); }

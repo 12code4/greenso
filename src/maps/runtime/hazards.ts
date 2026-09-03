@@ -67,12 +67,23 @@ export class HazardScheduler {
       const timer = Math.max(0, def.period - 20);
       const fired = new Set<number>();
       def.phases.forEach((p, i) => { if (p.at <= timer) fired.add(i); });
-      this.runners.push({ def, timer, period: def.period + rand(0, def.jitter ?? 0), fired, cued: new Set(fired) });
+      this.runners.push({ def, timer: def.period <= 0 ? -1 : timer, period: def.period + rand(0, def.jitter ?? 0), fired: def.period <= 0 ? new Set<number>() : fired, cued: def.period <= 0 ? new Set<number>() : new Set(fired) });
     }
+  }
+
+  /** Fire a one-shot hazard (period 0) now: its phases run once from t = 0. */
+  fire(id: string): boolean {
+    const r = this.runners.find((x) => x.def.id === id);
+    if (!r) return false;
+    r.timer = 0;
+    r.fired.clear();
+    r.cued.clear();
+    return true;
   }
 
   update(dt: number, playerPos: THREE.Vector3): void {
     for (const r of this.runners) {
+      if (r.def.period <= 0 && r.timer < 0) continue; // one-shot, not fired
       r.timer += dt;
       for (let i = 0; i < r.def.phases.length; i++) {
         const ph = r.def.phases[i];
@@ -87,6 +98,7 @@ export class HazardScheduler {
           for (const op of ph.ops) this.run(op);
         }
       }
+      if (r.def.period <= 0) continue; // one-shot: never cycles
       if (r.timer >= r.period) {
         r.timer -= r.period;
         r.period = r.def.period + rand(0, r.def.jitter ?? 0);

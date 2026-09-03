@@ -9,6 +9,9 @@ export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
   private muted = false;
+  private recordOn = false;
+  private seqNext = 0;
+  private seqStep = 0;
   private sfx!: GainNode;
   private amb!: GainNode;
   private music!: GainNode;
@@ -57,6 +60,50 @@ export class AudioEngine {
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.startAmbience();
+  }
+
+  /** The living-room record: a cheerful 16-step loop (secret 18). */
+  record(on: boolean): void {
+    this.recordOn = on;
+    if (on && this.ctx) { this.seqNext = this.ctx.currentTime + 0.1; this.seqStep = 0; }
+    if (this.music) this.music.gain.linearRampToValueAtTime(on ? 0.7 : 0, this.ctx!.currentTime + 0.5);
+  }
+
+  /** Four-note chime for a found secret. */
+  chime(): void {
+    if (!this.ready) return;
+    const ctx = this.ctx!;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, ctx.currentTime + i * 0.12, 0.35, 0.18, 'sine'));
+  }
+
+  private tone(freq: number, at: number, dur: number, gain: number, type: OscillatorType): void {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(gain, at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g).connect(this.music);
+    o.start(at);
+    o.stop(at + dur + 0.05);
+  }
+
+  private tickRecord(): void {
+    if (!this.recordOn || !this.ready) return;
+    const ctx = this.ctx!;
+    // C major, a bouncy 60s-record tune: melody + a walking bass every other step
+    const melody = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 392.0, 440.0, 523.25, 659.25, 523.25, 587.33, 493.88, 523.25, 392.0];
+    const bass = [130.81, 0, 196.0, 0, 174.61, 0, 196.0, 0, 130.81, 0, 196.0, 0, 174.61, 0, 196.0, 0];
+    const step = 0.22;
+    while (this.seqNext < ctx.currentTime + 0.25) {
+      const i = this.seqStep % 16;
+      this.tone(melody[i], this.seqNext, 0.2, 0.12, 'triangle');
+      if (bass[i]) this.tone(bass[i], this.seqNext, 0.3, 0.1, 'square');
+      this.seqNext += step;
+      this.seqStep++;
+    }
   }
 
   setMuted(on: boolean): void {
@@ -146,6 +193,7 @@ export class AudioEngine {
   }
 
   update(dt: number): void {
+    this.tickRecord();
     if (!this.ready) return;
     const ctx = this.ctx!;
     // Birds

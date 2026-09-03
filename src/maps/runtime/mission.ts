@@ -21,6 +21,10 @@ export interface MissionWorld {
   regions: RegionSystem;
   director: EncounterDirector;
   isFreed(powId: string): boolean;
+  /** `use` objectives: has this interactable fired? */
+  isUsed?(id: string): boolean;
+  /** `pickup` objectives: does the player hold this flag/kind? */
+  hasFlag?(flag: string): boolean;
 }
 
 export class MissionFSM {
@@ -31,6 +35,7 @@ export class MissionFSM {
   powsFreed = 0;
   private hooks: MissionHooks;
   private startDelay = 0;
+  private waitT = 0;
 
   constructor(def: MissionDef, hooks: MissionHooks) {
     this.def = def;
@@ -57,6 +62,7 @@ export class MissionFSM {
     }
     this.hooks.objective(o.text);
     if (o.radio) this.hooks.radio(o.radio);
+    this.waitT = o.kind === 'wait' ? (o.seconds ?? 5) : 0;
     this.hooks.onObjectiveStart(o.id);
   }
 
@@ -83,6 +89,16 @@ export class MissionFSM {
       case 'rescue':
         done = w.isFreed(o.target);
         if (done) this.powsFreed++;
+        break;
+      case 'use':
+        done = !!w.isUsed?.(o.target);
+        break;
+      case 'pickup':
+        done = !!w.hasFlag?.(o.target);
+        break;
+      case 'wait':
+        this.waitT -= dt;
+        done = this.waitT <= 0;
         break;
     }
     if (done) {

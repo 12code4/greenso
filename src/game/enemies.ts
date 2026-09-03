@@ -108,6 +108,8 @@ export class Enemy {
   announced = false;
   /** Awareness ladder: 0..1 while suspicious; ≥1 locks on. */
   suspicion = 0;
+  /** Patrol loop (docs/10 §7): walked while idle. */
+  patrol: { points: THREE.Vector3[]; i: number; pauseT: number; speed: number; pause: number } | null = null;
 
   constructor(type: EnemyType, at: THREE.Vector3, yaw: number, encounter: string, nodes: THREE.Vector3[], scene: THREE.Scene, ambush: boolean) {
     this.type = type;
@@ -177,9 +179,11 @@ export class EnemyManager implements Hittable {
 
   // ------------------------------------------------------------ UnitSpawner
 
-  spawn(type: EnemyType, at: THREE.Vector3, yaw: number, encounterId: string, nodes: THREE.Vector3[], ambush: boolean): void {
-    this.list.push(new Enemy(type, at, yaw, encounterId, nodes, this.scene, ambush));
+  spawn(type: EnemyType, at: THREE.Vector3, yaw: number, encounterId: string, nodes: THREE.Vector3[], ambush: boolean): Enemy {
+    const e = new Enemy(type, at, yaw, encounterId, nodes, this.scene, ambush);
+    this.list.push(e);
     if (ambush) this.alertAt.set(encounterId, { t: this.time, at: at.clone() });
+    return e;
   }
 
   aliveIn(encounterId: string): number {
@@ -714,11 +718,24 @@ export class EnemyManager implements Hittable {
     const toTarget = this.tmp2.subVectors(e.lastSeen, e.pos);
     toTarget.y = 0;
     const dist = toTarget.length();
-    const speed = e.state === 'flee' ? 4.6 : e.state === 'charge' ? 4.8 : e.type === 'flamer' ? 3.8 : 3.2;
+    const speed = e.state === 'flee' ? 4.6 : e.state === 'charge' ? 4.8 : e.type === 'flamer' ? 3.8 : e.state === 'idle' && e.patrol ? e.patrol.speed : 3.2;
     if (e.state === 'flee') {
       wish.copy(toTarget).multiplyScalar(-1);
     } else if (e.state === 'charge') {
       wish.copy(toTarget);
+    } else if (e.state === 'idle' && e.patrol) {
+      // Walk the loop; pause and look around at each point
+      const p = e.patrol;
+      const target = p.points[p.i];
+      const to = this.tmp3.subVectors(target, e.pos);
+      to.y = 0;
+      if (to.length() < 1.3) {
+        if (p.pauseT <= 0) e.homeYaw = e.yaw; // scan around the direction you arrived
+        p.pauseT += dt;
+        if (p.pauseT >= p.pause) { p.i = (p.i + 1) % p.points.length; p.pauseT = 0; }
+      } else {
+        wish.copy(to);
+      }
     } else if (e.state === 'combat' || e.state === 'suspicious') {
       const near = e.type === 'officer' ? 12 : e.type === 'flamer' ? 3 : 6;
       const far = e.type === 'officer' ? 17 : e.type === 'flamer' ? 5.5 : 10;

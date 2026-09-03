@@ -3,7 +3,7 @@
 
 import { Vec3 } from '../../core/math';
 
-export type RegionKind = 'arena' | 'connector' | 'overlook' | 'secret' | 'exit';
+export type RegionKind = 'arena' | 'connector' | 'overlook' | 'secret' | 'exit' | 'climb';
 
 export interface RegionDef {
   id: string;
@@ -23,6 +23,8 @@ export interface PropInstance {
   yaw?: number;
   variant?: number;
   tags?: string[];
+  /** Parametric props (counter runs, shelves, rails, walls of books) read their W×H×D from here. */
+  size?: Vec3;
 }
 
 export type RouteClass = 'main' | 'flank' | 'crawl' | 'climb' | 'secret' | 'setpiece';
@@ -38,7 +40,40 @@ export type EnemyType = 'trooper' | 'based' | 'grenadier' | 'sniper' | 'officer'
 /** Hold-E interactables (Update 4): sabotage a battery crate, or light a bottle rocket that flings you to `to`. */
 export type InteractableDef =
   | { id: string; kind: 'sabotage'; at: Vec3; prompt: string; hold?: number }
-  | { id: string; kind: 'launch'; at: Vec3; to: Vec3; prompt: string; hold?: number; flightTime?: number };
+  | { id: string; kind: 'launch'; at: Vec3; to: Vec3; prompt: string; hold?: number; flightTime?: number }
+  /** Generic hold-E: fires `event` (mission objectives of kind `use` complete on it). `requires` = a WorldState flag; `grants` = a flag set on use. */
+  | { id: string; kind: 'use'; at: Vec3; prompt: string; hold?: number; requires?: string; grants?: string; once?: boolean; lockedPrompt?: string }
+  /** Teleport within the floor (the vacuum hose). */
+  | { id: string; kind: 'warp'; at: Vec3; to: Vec3; prompt: string; hold?: number };
+
+/** Tans that walk a loop of points when idle (docs/10 §7). */
+export interface PatrolDef {
+  id: string;
+  points: Vec3[];
+  units: EnemyType[];
+  speed?: number;
+  pause?: number;
+}
+
+/** Random ambush pockets rolled on region entry from tagged concealment spots (docs/10 §7). */
+export interface PocketDef {
+  spots: { at: Vec3; region: string }[];
+  tables: { units: EnemyType[]; weight: number }[];
+  chance: number;
+  cooldown: number;
+}
+
+/** A way to another floor (docs/10 §5): a trigger volume; the destination map may not exist yet. */
+export interface FloorLinkDef {
+  id: string;
+  kind: 'chute' | 'stairs' | 'duct' | 'ladder' | 'door' | 'gap' | 'window' | 'express' | 'climb';
+  name: string;
+  min: Vec3;
+  max: Vec3;
+  to: { map: string; spawn: Vec3; yaw: number };
+  /** Found by exploring (default) or unlocked by a mission id. */
+  foundBy?: string;
+}
 
 export interface UnitDef {
   type: EnemyType;
@@ -84,7 +119,7 @@ export interface HazardDef {
   telegraph?: { cue: string; lead: number };
 }
 
-export type PickupKind = 'ammo' | 'glue' | 'moldTray' | 'marble' | 'bands' | 'flamer' | 'bazooka';
+export type PickupKind = 'ball' | 'string' | 'ammo' | 'glue' | 'moldTray' | 'marble' | 'bands' | 'flamer' | 'bazooka';
 
 export interface PickupDef {
   kind: PickupKind;
@@ -122,7 +157,7 @@ export interface AircraftWave {
   on: string;
 }
 
-export type ObjectiveKind = 'reach' | 'clear' | 'rescue' | 'ride' | 'discover';
+export type ObjectiveKind = 'use' | 'wait' | 'pickup' | 'reach' | 'clear' | 'rescue' | 'ride' | 'discover';
 
 export interface ObjectiveDef {
   id: string;
@@ -136,9 +171,12 @@ export interface ObjectiveDef {
   radioDone?: string;
   /** Explicit waypoint for the radio pin (else derived from the target). */
   at?: Vec3;
+  /** `wait`: seconds. */
+  seconds?: number;
 }
 
 export interface MissionDef {
+  id?: string;
   title: string;
   briefing: string[];
   objectives: ObjectiveDef[];
@@ -162,7 +200,7 @@ export interface GrassZone {
 }
 
 export interface GroundZone {
-  kind: 'lawn' | 'soil' | 'planks' | 'stone' | 'water';
+  kind: 'lawn' | 'soil' | 'planks' | 'stone' | 'water' | 'tile' | 'hardwood' | 'carpet' | 'concrete';
   min: Vec3;
   max: Vec3;
   /** Top height of this ground slab (0 = flush with ground plane). */
@@ -177,7 +215,7 @@ export interface ShellDef {
   hemi: { sky: number; ground: number; intensity: number };
   ground: GroundZone[];
   /** Big masses that close the horizon: walls, fences, furniture. Always colliders. */
-  masses: { kind: 'fence' | 'siding' | 'mass'; min: Vec3; max: Vec3; color?: number }[];
+  masses: { kind: 'fence' | 'siding' | 'mass' | 'wall' | 'ceiling' | 'slab' | 'glass'; min: Vec3; max: Vec3; color?: number }[];
   /** Invisible bounds. */
   bounds: { min: Vec3; max: Vec3 };
 }
@@ -198,9 +236,16 @@ export interface MapDef {
   pickups: PickupDef[];
   pows?: PowDef[];
   interactables?: InteractableDef[];
+  patrols?: PatrolDef[];
+  pockets?: PocketDef;
+  links?: FloorLinkDef[];
+  /** Sky-less interiors: skip the dome and use the fog colour as the backdrop. */
+  indoor?: boolean;
   platforms?: PlatformDef[];
   aircraft?: AircraftWave[];
   mission?: MissionDef;
+  /** Several missions per map (the house floors): selected with ?mission=<id>; the first is the gate mission. */
+  missions?: MissionDef[];
   landmarks: LandmarkDef[];
   /** Optional pop-up target lanes (kit test scene / tutorial). */
   targetLanes?: { at: Vec3; yaw: number; slide?: { axis: Vec3; amp: number; speed: number } }[];

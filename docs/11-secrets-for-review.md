@@ -1,6 +1,6 @@
 # 11 — Secrets for PM review
 
-*Every secret in the house goes through this list before it is built (PM decision 9). Mark each one **keep / cut / change**. "Reference" names what it winks at; every reference is an homage in our own words and shapes, never a logo, name, or asset (docs/01 IP boundaries). Kinds: **gag** (you look, you smile), **area** (a hidden place), **collectible** (counts toward something), **interaction** (press E, something happens).*
+*Every secret in the house goes through this list before it is built (PM decision 9). **Reviewed 2026-09-03: all fifty approved as written** ("Love them, do them all"). The PM column stays for future additions. "Reference" names what it winks at; every reference is an homage in our own words and shapes, never a logo, name, or asset (docs/01 IP boundaries). Kinds: **gag** (you look, you smile), **area** (a hidden place), **collectible** (counts toward something), **interaction** (press E, something happens).*
 
 Rooms use the atlas IDs (docs/10). Era is roughly 1996.
 

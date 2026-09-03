@@ -37,7 +37,7 @@ export interface MapRuntime {
 /** Place one kit prop at a world position/yaw, registering its colliders. */
 export function placeProp(inst: PropInstance, scene: THREE.Scene, world: CollisionWorld | null): PlacedProp {
   const prop = kitProp(inst.kit);
-  const built = prop.build(inst.variant ?? 0);
+  const built = prop.build(inst.variant ?? 0, inst.size);
   const yaw = inst.yaw ?? 0;
   built.mesh.position.copy(v3(inst.at));
   built.mesh.rotation.y = yaw;
@@ -69,7 +69,7 @@ export function buildMap(
   baseGround: string,
   hazardHooks: HazardHooks,
 ): MapRuntime {
-  const shell = buildShell(def.shell, scene, world, baseGround);
+  const shell = buildShell(def.shell, scene, world, baseGround, !!def.indoor);
 
   const props: PlacedProp[] = [];
   for (const inst of def.props) props.push(placeProp(inst, scene, world));

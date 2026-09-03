@@ -23,32 +23,32 @@ export interface KitProp {
   dims: Vec3;
   walkableTop?: boolean;
   cover?: 'CC' | 'SC' | 'BW';
-  build(variant: number): BuiltProp;
+  build(variant: number, size?: Vec3): BuiltProp;
 }
 
-const CM = 1 / 5.4; // cm → units
+export const CM = 1 / 5.4; // cm → units
 
-const boxMesh = (w: number, h: number, d: number, m: THREE.Material, y = h / 2): THREE.Mesh => {
+export const boxMesh = (w: number, h: number, d: number, m: THREE.Material, y = h / 2): THREE.Mesh => {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
   mesh.position.y = y;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   return mesh;
 };
-const cylMesh = (r: number, h: number, m: THREE.Material, y = h / 2, seg = 18): THREE.Mesh => {
+export const cylMesh = (r: number, h: number, m: THREE.Material, y = h / 2, seg = 18): THREE.Mesh => {
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), m);
   mesh.position.y = y;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   return mesh;
 };
-const solid = (w: number, h: number, d: number, y = h / 2, x = 0, z = 0): LocalBox => ({
+export const solid = (w: number, h: number, d: number, y = h / 2, x = 0, z = 0): LocalBox => ({
   center: [x, y, z],
   size: [w, h, d],
 });
-const pickColor = (variant: number, colors: number[]): number => colors[Math.abs(variant) % colors.length];
+export const pickColor = (variant: number, colors: number[]): number => colors[Math.abs(variant) % colors.length];
 
-const BOOK_COLORS = [0x8a4a3c, 0x3c5a7a, 0x4a6b4a, 0xc9a04e, 0x704a68, 0x2f2f38];
+export const BOOK_COLORS = [0x8a4a3c, 0x3c5a7a, 0x4a6b4a, 0xc9a04e, 0x704a68, 0x2f2f38];
 const BLOCK_COLORS = [0xc96f5e, 0x6e8fc9, 0xd9b358, 0x7aa86a];
 const CAN_LIVERIES: [string, string, string, number][] = [
   ['#c93a3a', '#f2e6c8', 'ZAP!', 0xc94040],
@@ -59,7 +59,7 @@ const CAN_LIVERIES: [string, string, string, number][] = [
 
 export const KIT: Record<string, KitProp> = {};
 
-function reg(p: KitProp): void {
+export function reg(p: KitProp): void {
   KIT[p.id] = p;
 }
 

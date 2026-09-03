@@ -17,6 +17,13 @@ import { Squadmate } from './game/squad';
 import { Waypoint } from './game/waypoint';
 import { LOOK } from './game/camera';
 import { Enemy } from './game/enemies';
+import { WorldState } from './game/world';
+import { FloorLinkSystem } from './game/links';
+import { PocketRoller } from './game/pockets';
+import { PatrolSystem } from './game/patrols';
+import { Breakables } from './game/breakables';
+import { placeProp } from './maps/runtime/build';
+import { MissionDef } from './maps/runtime/types';
 import { Hud } from './ui/hud';
 import { AudioEngine } from './audio/synth';
 import { MAPS, DEFAULT_MAP, BASE_GROUND } from './maps/defs';
@@ -31,6 +38,24 @@ const TEST_MODE = params.has('test');
 const NO_ENEMIES = params.has('noenemies'); // route-walk gate: geometry only
 const MAP_ID = params.get('map') ?? DEFAULT_MAP;
 const mapDef = MAPS[MAP_ID] ?? MAPS[DEFAULT_MAP];
+const FROM_LINK = params.get('from');
+
+// ---- The house remembers (docs/10 §5): found routes, finished missions, permanent changes, secrets
+const worldState = new WorldState();
+/** Flags that live for one mission run (string, ball, lured). Permanent ones go to worldState. */
+const missionFlags = new Set<string>();
+const hasFlag = (f: string): boolean => missionFlags.has(f) || worldState.flags.has(f);
+
+// Which mission on this map: ?mission=<id>, else the first one not yet completed, else the first
+const missionDef: MissionDef | null = (() => {
+  if (mapDef.missions?.length) {
+    const want = params.get('mission');
+    return mapDef.missions.find((m) => m.id === want)
+      ?? mapDef.missions.find((m) => !worldState.missions.has(m.id ?? ''))
+      ?? mapDef.missions[0];
+  }
+  return mapDef.mission ?? null;
+})();
 
 const app = document.getElementById('app')!;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -72,10 +97,19 @@ const map = buildMap(mapDef, scene, world, BASE_GROUND[mapDef.id] ?? 'lawn', {
   sprinklerLoop: (on) => audio.loop('sprinkler', on, 0.28),
 });
 
-// ---- Player
-const player = new Player(map.spawn);
+// ---- Player (arriving from another floor lands you at that link's far end)
+const arrival = (() => {
+  if (!FROM_LINK) return null;
+  for (const m of Object.values(MAPS)) {
+    const l = (m.links ?? []).find((x) => x.id === FROM_LINK);
+    if (l && l.to.map === mapDef.id) return l.to;
+  }
+  return null;
+})();
+const player = new Player(arrival ? v3(arrival.spawn) : map.spawn);
 player.attachTo(scene);
-cam.yaw = map.spawnYaw;
+cam.yaw = arrival ? arrival.yaw : map.spawnYaw;
+if (arrival) map.regions.checkpoint.copy(player.pos);
 
 // ---- Combat systems
 const projectiles = new Projectiles(scene, {
@@ -113,7 +147,14 @@ const aircraft = new AircraftSystem(mapDef.aircraft ?? [], scene, {
 });
 
 const director: EncounterDirector = new EncounterDirector(mapDef.encounters, enemies);
-map.regions.onEnter((r) => { if (!NO_ENEMIES) director.onRegionEnter(r.def.id); });
+const pockets = mapDef.pockets && !NO_ENEMIES ? new PocketRoller(mapDef.pockets, enemies) : null;
+if (!NO_ENEMIES) new PatrolSystem(mapDef.patrols ?? [], enemies);
+map.regions.onEnter((r) => {
+  if (NO_ENEMIES) return;
+  director.onRegionEnter(r.def.id);
+  pockets?.onRegionEnter(r.def.id);
+});
+pockets && (pockets.onSpawn = (at, n) => { void at; if (n >= 3 && Math.random() < 0.5) hud.radio('LT. OLIVE', 'Pocket. They were in the furniture.', 3); });
 const devtools = new DevTools(scene, map.regions);
 const autopilot = new Autopilot();
 spawnWaveHook = (id) => director.activate(id);
@@ -151,7 +192,67 @@ const interact = new InteractSystem(mapDef.interactables ?? [], scene, {
     hud.radio('LT. OLIVE', 'Bottle rocket. Hold on to your helmet.', 3);
     barks.say(player, player.pos, 'WHEEEE—', 'green');
   },
+  hasFlag,
+  setFlag: (f) => { missionFlags.add(f); if (f === 'bridge') worldState.setFlag('bridge'); },
+  onWarp: (to) => {
+    player.pos.copy(to);
+    player.vel.set(0, 0, 0);
+    cam.addTrauma(0.3);
+    audio.play('rocket', player.pos, 0.6);
+    hud.toast('WHOOSH');
+    if (worldState.foundSecret('s21')) hud.radio('LT. OLIVE', 'The hose goes somewhere. Noted. Never doing that again.', 4);
+  },
+  onUse: (id) => onUse(id),
 });
+
+/** Ruler bridge across the marble run's gap: a permanent change to the house. */
+let bridgePlaced = false;
+const placeBridge = (): void => {
+  if (bridgePlaced || mapDef.id !== 'g') return;
+  bridgePlaced = true;
+  placeProp({ kit: 'ruler_bridge', at: [94, 17.25, 40], yaw: 0, size: [1.6, 7.15, 10] }, scene, world);
+};
+if (worldState.flags.has('bridge')) placeBridge();
+
+function onUse(id: string): void {
+  switch (id) {
+    case 'use_drawer':
+      hud.toast('STRING — a whole spool of it');
+      if (worldState.foundSecret('s14')) audio.chime();
+      break;
+    case 'use_gap':
+      placeBridge();
+      audio.play('clack', player.pos, 1);
+      cam.addTrauma(0.2);
+      enemies.noise(player.pos, 60);
+      break;
+    case 'use_photo':
+      hud.toast('STRAIGHTENED');
+      player.heal(100);
+      if (worldState.foundSecret('s19')) {
+        audio.chime();
+        hud.radio('LT. OLIVE', 'That\'s the backyard in that photo. The birdbath. Fern says hello.', 5);
+        worldState.sideQuests.add('SQ_photo'); worldState.save();
+      }
+      break;
+    case 'use_record':
+      recordOn = !recordOn;
+      audio.record(recordOn);
+      hud.toast(recordOn ? 'SIDE A' : 'NEEDLE UP');
+      if (recordOn && worldState.foundSecret('s18')) audio.chime();
+      break;
+    case 'use_microwave':
+      hud.toast('HI PIP');
+      audio.play('pickup', player.pos, 0.8);
+      if (worldState.foundSecret('s15')) { audio.chime(); hud.radio('LT. OLIVE', 'The kids\' code. It just says hi to Pip. That\'s all it ever did.', 4); }
+      break;
+    case 'use_flap':
+      map.hazards.fire('H_biscuit');
+      hud.radio('GEN. TAUPE', 'Was that the DOG? Everyone off the floor! OFF THE FLOOR!', 4, 'tan');
+      break;
+  }
+}
+let recordOn = false;
 
 const pows = new PowSystem(mapDef.pows ?? [], scene, {
   sfx: (name, at) => audio.play(name, at),
@@ -171,7 +272,18 @@ const lanes: LaneSpec[] = (mapDef.targetLanes ?? []).map((l) => ({
   slide: l.slide ? { axis: v3(l.slide.axis), amp: l.slide.amp, speed: l.slide.speed } : undefined,
 }));
 const targets = new TargetRange(scene, lanes);
-const hittables: Hittable[] = [enemies, aircraft, targets];
+const breakables = new Breakables();
+for (const pp of map.props) {
+  if (pp.def.kit === 'piggy_bank') breakables.add({ id: 'piggy', at: v3(pp.def.at).add(new THREE.Vector3(0, 2.2, 0)), radius: 2.8, hp: 8, object: pp.object });
+}
+breakables.onBreak = (id, at) => {
+  void id;
+  for (let i = 0; i < 3; i++) setTimeout(() => audio.play('marble', at, 0.9), i * 120);
+  hud.toast('COINS EVERYWHERE');
+  hud.radio('LT. OLIVE', 'You monster.', 3);
+  if (worldState.foundSecret('s50')) audio.chime();
+};
+const hittables: Hittable[] = [enemies, aircraft, targets, breakables];
 
 const weapons = new Weapons(scene, player, projectiles, world);
 let killStreakT = 0;
@@ -200,7 +312,7 @@ const regionCenter = (id: string): THREE.Vector3 => {
   return new THREE.Vector3((b.min.x + b.max.x) / 2, b.min.y, (b.min.z + b.max.z) / 2);
 };
 const waypointFor = (id: string): THREE.Vector3 | null => {
-  const o = mapDef.mission?.objectives.find((x) => x.id === id);
+  const o = missionDef?.objectives.find((x) => x.id === id);
   if (!o) return null;
   if (o.at) return v3(o.at);
   switch (o.kind) {
@@ -219,8 +331,8 @@ const waypointFor = (id: string): THREE.Vector3 | null => {
   }
   return null;
 };
-const mission = mapDef.mission
-  ? new MissionFSM(mapDef.mission, {
+const mission = missionDef
+  ? new MissionFSM(missionDef, {
       radio: (t) => hud.radio('LT. OLIVE', t),
       objective: (t) => hud.setObjective(t),
       onObjectiveStart: (id) => {
@@ -232,7 +344,7 @@ const mission = mapDef.mission
       },
       onObjectiveDone: (id) => {
         // Checkpoint per objective: you never redo what you already did
-        const last = mapDef.mission!.objectives[mapDef.mission!.objectives.length - 1].id;
+        const last = missionDef!.objectives[missionDef!.objectives.length - 1].id;
         if (id !== last && player.alive && player.grounded) {
           map.regions.checkpoint.copy(player.pos);
           hud.toast('CHECKPOINT');
@@ -246,10 +358,11 @@ const mission = mapDef.mission
       onComplete: () => {
         finished = true;
         waypoint.setTarget(null);
+        if (missionDef!.id) worldState.completeMission(missionDef!.id);
         hud.showTally({
-          title: mapDef.mission!.title,
+          title: missionDef!.title,
           timeSeconds: mission!.elapsed,
-          parSeconds: mapDef.mission!.parSeconds,
+          parSeconds: missionDef!.parSeconds,
           marbles: map.pickups.marblesFound,
           marblesTotal: map.pickups.marblesTotal,
           powsFreed: mission!.powsFreed,
@@ -286,9 +399,11 @@ player.onDeath = () => {
 };
 
 map.pickups.onCollect = (kind, id, at) => {
-  void id;
   audio.play(kind === 'marble' ? 'marble' : kind === 'flamer' || kind === 'bazooka' ? 'pickup_weapon' : 'pickup', at);
+  if (kind === 'marble' && id) worldState.collectMarble(mapDef.id, id);
   switch (kind) {
+    case 'ball': missionFlags.add('ball'); hud.toast('BISCUIT\'S BALL — half the fuzz gone'); break;
+    case 'string': missionFlags.add('string'); hud.toast('STRING'); break;
     case 'flamer':
       weapons.unlock('flamer'); weapons.addFuel(80);
       hud.toast('BIRTHDAY-CANDLE FLAMETHROWER — melt them (4)', 4);
@@ -307,9 +422,30 @@ map.pickups.onCollect = (kind, id, at) => {
   }
 };
 
-const missionList = Object.values(MAPS).map((m) => ({ id: m.id, title: m.title, sub: m.mission?.title ?? m.realFootprint, current: m.id === mapDef.id }));
-if (mapDef.mission) hud.setBriefing('PLASTIC PLATOON', mapDef.mission.title.toUpperCase(), mapDef.mission.briefing, missionList);
+const missionList = Object.values(MAPS).flatMap((m) => {
+  if (m.missions?.length) return m.missions.map((ms) => ({ href: `?map=${m.id}&mission=${ms.id}`, title: `${m.title} · ${ms.title}`, sub: worldState.missions.has(ms.id ?? '') ? 'done' : ms.objectives[0]?.text ?? '', current: m.id === mapDef.id && ms.id === missionDef?.id }));
+  return [{ href: `?map=${m.id}`, title: m.title, sub: m.mission?.title ?? m.realFootprint, current: m.id === mapDef.id }];
+});
+if (missionDef) hud.setBriefing('PLASTIC PLATOON', missionDef.title.toUpperCase(), missionDef.briefing, missionList);
 else hud.setBriefing('PLASTIC PLATOON', mapDef.title.toUpperCase(), [], missionList);
+
+// ---- Floor links: the loading moment (docs/10 §5)
+const FLOOR_NAMES: Record<string, string> = { b: 'THE BASEMENT', g: 'THE GROUND FLOOR', u: 'UPSTAIRS', a: 'THE ATTIC', y: 'THE YARD', backyard: 'THE BACKYARD' };
+const links = new FloorLinkSystem(mapDef.links ?? [], worldState);
+let leaving = false;
+links.onLink = (def, already) => {
+  if (leaving) return;
+  const target = MAPS[def.to.map];
+  if (target) {
+    leaving = true;
+    hud.showCard(FLOOR_NAMES[def.to.map] ?? def.to.map.toUpperCase(), `VIA ${def.name.toUpperCase()}`, 0);
+    audio.play('radio', undefined, 0.5);
+    setTimeout(() => { location.href = `?map=${def.to.map}&from=${def.id}${TEST_MODE ? '&test' : ''}`; }, 1200);
+  } else {
+    hud.showCard(FLOOR_NAMES[def.to.map] ?? def.to.map.toUpperCase(), `VIA ${def.name.toUpperCase()} — NOT BUILT YET`, 2.6);
+    if (!already) hud.radio('LT. OLIVE', `That's ${def.name}. It goes to ${(FLOOR_NAMES[def.to.map] ?? def.to.map).toLowerCase()}. Route found — we'll take it when the floor's there.`, 5);
+  }
+};
 hud.setMarbles(0, map.pickups.marblesTotal);
 hud.setMelt(1);
 
@@ -343,7 +479,11 @@ if (TEST_MODE) {
     teleport: (x: number, y: number, z: number) => { player.pos.set(x, y, z); player.vel.set(0, 0, 0); },
     heal: () => player.heal(100),
     setYaw: (y: number) => { cam.yaw = y; },
+    setPitch: (p: number) => { cam.pitch = p; },
     give: (id: 'flamer' | 'bazooka' | 'sniper') => { weapons.unlock(id); weapons.addFuel(200); weapons.addRockets(8); weapons.addBands(12); },
+    flag: (f: string) => { missionFlags.add(f); if (f === 'bridge') placeBridge(); },
+    use: (id: string) => interact.trigger(id),
+    resetWorld: () => worldState.reset(),
     activate: (id: string) => director.activate(id),
     // Flow tests: force-clear an encounter (combat is gated separately)
     clearEncounter: (id: string) => {
@@ -364,6 +504,10 @@ if (TEST_MODE) {
       deaths: player.deaths,
       region: map.regions.current?.def.id ?? null,
       objective: mission?.active?.id ?? null,
+      mission: missionDef?.id ?? null,
+      flags: [...missionFlags, ...worldState.flags],
+      found: [...worldState.found],
+      secrets: worldState.secrets.size,
       complete: mission?.complete ?? false,
       marbles: map.pickups.marblesFound,
       enemies: enemies.list.filter((e) => e.alive).length,
@@ -446,6 +590,8 @@ function frame(): void {
     enemies.update(dt, player, (p) => map.grass.concealmentAt(p));
     aircraft.update(dt, player.pos, player.alive, world);
     director.update(dt);
+    pockets?.update(dt);
+    links.update(dt, player.pos);
     squad.update(dt, player, cam.yaw, enemies, world);
     targets.update(dt, time);
     map.regions.update(player.pos);
@@ -465,7 +611,7 @@ function frame(): void {
     hud.setBurning(player.alive && player.burning > 0);
     hud.setPrompt(prompt?.text ?? null, prompt?.progress ?? 0);
     pows.overwatch(dt, enemies, world);
-    if (mission) mission.update(dt, { playerPos: player.pos, regions: map.regions, director, isFreed: (id) => pows.isFreed(id) });
+    if (mission) mission.update(dt, { playerPos: player.pos, regions: map.regions, director, isFreed: (id) => pows.isFreed(id), isUsed: (id) => interact.used.has(id), hasFlag });
     audio.setCombat(enemies.anyInCombat() || aircraft.planes.length > 0);
     audio.loop('flame', weapons.firingFlame && player.alive, 0.5);
     barks.update(dt);

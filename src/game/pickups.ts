@@ -139,6 +139,28 @@ function buildVisual(kind: PickupKind): THREE.Object3D {
       }
       return g;
     }
+    case 'ball': {
+      const g = new THREE.Group();
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(1.2, 14, 12), mat('FABRIC_SOFT', 0xd8e04a));
+      ball.position.y = 1.2;
+      ball.castShadow = true;
+      g.add(ball);
+      const seam = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 6, 24), mat('FABRIC_SOFT', 0xf4f4f4));
+      seam.rotation.x = 0.7;
+      seam.position.y = 1.2;
+      g.add(seam);
+      return g;
+    }
+    case 'string': {
+      const g = new THREE.Group();
+      const spool = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1.6, 12), mat('WOOD_WARM', 0xe8d9b0));
+      spool.position.y = 0.8;
+      g.add(spool);
+      const wrap = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 1.2, 14), mat('FABRIC_SOFT', 0xf2e6c8));
+      wrap.position.y = 0.8;
+      g.add(wrap);
+      return g;
+    }
     case 'marble': {
       const g = new THREE.Group();
       const outer = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), mat('GLASS_CHEAP', 0xbfe4ff));
