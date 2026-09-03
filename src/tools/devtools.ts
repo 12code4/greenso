@@ -132,9 +132,6 @@ export class Autopilot {
     }
     cam.yaw = Math.atan2(dx, dz);
     cam.pitch = 0.15;
-    input.injectKey('KeyW', true);
-    input.injectKey('ShiftLeft', horiz > 4);
-    // Jump when the target is above us and close, or when stuck against something
     const moved = player.pos.distanceTo(this.lastPos);
     this.stuckT = moved < 0.4 * dt * 4 ? this.stuckT + dt : 0;
     this.lastPos.copy(player.pos);
@@ -143,7 +140,18 @@ export class Autopilot {
       this.jumpHold -= dt;
       if (this.jumpHold <= 0) input.injectKey('Space', false);
     }
-    const wantJump = (dy > 0.3 && horiz < 2.6) || this.stuckT > 0.35;
+    // A hop: the target is above us and close. Wind up for it — don't walk off the ledge we're on while the
+    // jump is still cooling down (a turnaround ledge 2.5 u back and 1 u up needs the jump to start from here).
+    const hop = dy > 0.3 && horiz < 2.6;
+    if (hop && player.grounded && this.jumpHold <= 0 && this.jumpCooldown > 0) {
+      input.injectKey('KeyW', false);
+      input.injectKey('ShiftLeft', false);
+      return;
+    }
+    input.injectKey('KeyW', true);
+    input.injectKey('ShiftLeft', horiz > 4);
+    // Jump for a hop, or when stuck against something
+    const wantJump = hop || this.stuckT > 0.35;
     if (wantJump && this.jumpCooldown <= 0 && player.grounded && this.jumpHold <= 0) {
       input.injectKey('Space', true);
       this.jumpHold = 0.35;

@@ -656,11 +656,12 @@ reg({
     for (let k = 0; k < 4; k++) zs.push(-6 + 1.25 * k);
     let y = 3;
     for (const z of zs) {
-      const ledge = boxMesh(5.2, 1.0, 1.8, stone, y + 0.5);
+      // 1.2 along the run (< the 1.25 tread): neighbours never overlap, so no ledge hangs 1 u over the one beside it
+      const ledge = boxMesh(5.2, 1.0, 1.2, stone, y + 0.5);
       ledge.position.set(-w / 2 - 2.6, y + 0.5, z);
       ledge.rotation.y = (Math.random() - 0.5) * 0.06;
       g.add(ledge);
-      colliders.push(solid(5.2, 1.0, 1.8, y + 0.5, -w / 2 - 2.6, z)); // a slab, not a column: the return pass hangs over the first
+      colliders.push(solid(5.2, 1.0, 1.2, y + 0.5, -w / 2 - 2.6, z)); // a slab, not a column: the return pass hangs over the first
       y += 1.0;
     }
     // Andirons and a log
