@@ -212,7 +212,7 @@ let bridgePlaced = false;
 const placeBridge = (): void => {
   if (bridgePlaced || mapDef.id !== 'g') return;
   bridgePlaced = true;
-  placeProp({ kit: 'ruler_bridge', at: [94, 17.25, 40], yaw: 0, size: [1.6, 7.15, 10] }, scene, world);
+  placeProp({ kit: 'ruler_bridge', at: [94, 18.4, 40], yaw: 0, size: [1.6, 7.67, 10] }, scene, world);
 };
 if (worldState.flags.has('bridge')) placeBridge();
 
@@ -307,6 +307,9 @@ weapons.onThrow = () => audio.play('band', player.pos, 0.5);
 
 // ---- Mission + Olive's radio pin
 let finished = false;
+// House floors (maps with a mission list) don't freeze on completion: the tally is a card for a few
+// seconds and the sim keeps running, so the floor link you just unlocked fires when you step onto it.
+let tallyT = 0;
 const waypoint = new Waypoint(scene);
 let rideBoarded = false;
 const regionCenter = (id: string): THREE.Vector3 => {
@@ -358,7 +361,9 @@ const mission = missionDef
         } else if (id !== last && Math.random() < 0.35) hud.radio('GEN. TAUPE', pick(TAUPE_LINES.objective), 4, 'tan');
       },
       onComplete: () => {
-        finished = true;
+        const roam = !!mapDef.missions?.length;
+        finished = !roam;
+        if (roam) tallyT = 6;
         waypoint.setTarget(null);
         if (missionDef!.id) worldState.completeMission(missionDef!.id);
         hud.showTally({
@@ -604,6 +609,14 @@ function simulate(rawDt: number): void {
     director.update(dt);
     pockets?.update(dt);
     links.update(dt, player.pos);
+    if (tallyT > 0) {
+      tallyT -= dt;
+      if (tallyT <= 0) {
+        hud.hideTally();
+        const next = mapDef.missions?.find((m) => !worldState.missions.has(m.id ?? ''));
+        hud.radio('LT. OLIVE', next ? `Next on this floor: ${next.title}. Reload to take it, or keep exploring — the house is yours.` : 'This floor is done, Sergeant. The house is yours.', 6);
+      }
+    }
     squad.update(dt, player, cam.yaw, enemies, world);
     targets.update(dt, time);
     map.regions.update(player.pos);

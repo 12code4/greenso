@@ -2,11 +2,12 @@
 // Waits are GAME seconds. node tools/house-g.mjs
 import { chromium } from 'playwright-core';
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium', args: ['--use-gl=angle', '--use-angle=swiftshader', '--no-sandbox'] });
+const context = await browser.newContext({ viewport: { width: 1280, height: 720 } }); // one context: the saved world carries between runs
 const fails = [];
 const check = (name, ok, detail) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${name} ${detail ?? ''}`); if (!ok) fails.push(name); };
 
 async function run(query, steps) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const page = await context.newPage();
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
   page.on('console', (m) => { if (m.type() === 'error') console.log('[console]', m.text()); });
   await page.goto(`http://127.0.0.1:4173/?test&turbo&map=g${query}`, { waitUntil: 'networkidle' });
@@ -44,7 +45,7 @@ await run('&mission=g1', async ({ api, state, gameWait }) => {
   s = await state();
   check('string taken → rig_stairs', s.objective === 'rig_stairs' && s.flags.includes('string'), `objective=${s.objective} flags=${s.flags}`);
   // to the gap: stand on the lower run's top; the gap interactable needs the string
-  await api('window.__game.teleport(94, 17.4, 47)');
+  await api('window.__game.teleport(94, 18.6, 46)');
   await gameWait(1);
   await api('window.__game.use("use_gap")');
   await gameWait(3);
@@ -54,17 +55,21 @@ await run('&mission=g1', async ({ api, state, gameWait }) => {
   // climb the run for real from the bridge to the top (autopilot), with the picket force-cleared first
   await api('window.__game.clearEncounter("E_stairs")');
   await api('window.__game.heal()');
-  await api('window.__game.teleport(94, 17.4, 46)');
-  await api('window.__game.walkTo(94, 46, 8)');
+  await api('window.__game.teleport(94, 18.6, 46)');
+  await api('window.__game.walkTo(94, 46, 10.8)');
   const t0 = await api('window.__game.time()');
   while ((await api('window.__game.time()')) - t0 < 25) { if (await api('window.__game.walkArrived()')) break; await new Promise((r) => setTimeout(r, 150)); }
   await api('window.__game.walkStop()');
   s = await state();
-  check('walked the marble run to the top', s.pos[1] > 43 && s.pos[2] < 14, `pos=${s.pos.map((v) => v.toFixed(1))}`);
+  check('walked the marble run to the top', s.pos[1] > 43 && s.pos[2] < 15, `pos=${s.pos.map((v) => v.toFixed(1))}`);
   await gameWait(3.5);
   s = await state();
   check('G1 complete', s.complete === true, `complete=${s.complete} objective=${s.objective}`);
-  check('the stairs link is found', s.found.includes('L_stairs_G') || s.complete, `found=${s.found}`);
+  // step onto the back of the top step: the stairs link (open once G1 is done)
+  await api('window.__game.teleport(110, 46.1, 11.2)');
+  await gameWait(1.5);
+  s = await state();
+  check('the stairs link is found', s.found.includes('L_stairs_G'), `found=${s.found}`);
 });
 
 // ---- G2 (world state carries G1's completion)
@@ -89,6 +94,9 @@ await run('&mission=g2', async ({ api, state, gameWait }) => {
   await gameWait(3.5);
   s = await state();
   check('G2 complete at the flap', s.complete === true, `complete=${s.complete}`);
+  await api('window.__game.teleport(-24, 0, -110.5)');
+  await gameWait(1.5);
+  s = await state();
   check('dog door link found', s.found.includes('L_dogdoor'), `found=${s.found}`);
 });
 

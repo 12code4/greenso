@@ -109,7 +109,13 @@ box('mass', [-7.5, 52, 69 + T_INT / 2], [7.5, 89, 72], 0x2a241e); // the dark do
 box('ceiling', [-139, H, -111], [61, H + 2, -31]); // north row
 box('ceiling', [61, H, -111], [139, H + 2, 9]); // garage
 box('ceiling', [-139, H, -31], [-59, H + 2, 69]); // dining
-box('ceiling', [61, H, 9], [139, H + 2, 69]); // bath, closet, stairs
+box('ceiling', [61, H, 9], [91, H + 2, 69]); // bath, closet
+box('ceiling', [91, H, 40], [139, H + 2, 69]); // over the foot of the stairs
+// The stairwell continues up into the dark second floor: dark shell over the top half of the stairs
+box('mass', [91, H + 12, 9], [139, H + 14, 40], 0x2a241e);
+box('mass', [91 - T_INT / 2, H, 9], [91 + T_INT / 2, H + 12, 40], 0x2a241e);
+box('mass', [139 - T_EXT / 2, H, 9], [139 + T_EXT / 2, H + 12, 40], 0x2a241e);
+box('mass', [91, H, 9 - T_INT / 2], [139, H + 12, 9 + T_INT / 2], 0x2a241e);
 box('ceiling', [-139, H, 69], [139, H + 2, 111]); // hall
 // Vault ceiling with the skylight
 box('ceiling', [-59, VAULT, -31], [61, VAULT + 2, -5], 0xfaf6ee);
@@ -137,14 +143,14 @@ const props: PropInstance[] = [
   P('drawer_open', [-118, 10, -56], -Math.PI / 2),
   P('island', [-92, 0, -70]),
   P('stool', [-100, 0, -56]), P('stool', [-92, 0, -56]), P('stool', [-84, 0, -56]),
-  P('stack_stairs', [-129.5, 0, -37.5], 0, { size: [8, 16.7, 11] }), // to the west counter's end
+  P('ramp_plank', [-112, 0, -85], Math.PI / 2, { size: [3, 16.7, 24] }), // leaned on the west counter's front: the kids' way up
   P('box_cereal', [-88, 16.7, -66], 0.3), P('cup_mug', [-96, 16.7, -75], 0), P('cup_mug', [-120, 16.7, -103], 1.2),
   P('can_soda', [-88, 16.7, -64], 0), P('dog_bowl', [-58, 0, -40], 0), P('dog_bowl', [-52, 0, -40], 0, { variant: 1 }),
   P('clock_wall', [-90, 42, -33]), P('calendar', [-56, 30, -32.6], Math.PI), P('note_paper', [-51, 26, -80], -Math.PI / 2, { variant: 5 }),
   P('plant_floor', [-134, 0, -36], 0, { variant: 1 }),
   // ---- Pantry (tiers every 6.5)
   P('pantry_shelf', [-24, 0, -47], Math.PI, { size: [44, 37, 6] }),
-  P('stack_stairs', [-40, 0, -38], 0, { size: [6, 6.5, 8] }),
+  P('stack_stairs', [-40, 0, -39], 0, { size: [6, 7.2, 10] }), // to the second tier
   P('box_cereal', [-8, 0, -36], 0.5), P('box_cereal', [-12, 0, -34], -0.2, { variant: 1 }),
   // ---- Mudroom
   P('bench_mud', [-44.5, 0, -70], Math.PI / 2),
@@ -168,9 +174,9 @@ const props: PropInstance[] = [
   P('note_paper', [20, 30, -109.6], 0, { variant: 2 }),
   // ---- Garage
   P('car_sedan', [100, 0, -58], 0, { variant: 1 }),
-  P('stack_stairs', [100, 0, -103], Math.PI, { size: [10, 17, 7] }), // bumper → hood
+  P('ramp_plank', [100, 0, -5.5], 0, { size: [3, 17, 22], variant: 2 }), // leaned on the rear bumper → trunk → rear glass → roof
   P('tool_wall', [137, 0, -40], Math.PI / 2, { size: [60, 25, 2] }),
-  P('bike', [78, 0, 4], 0), P('bike', [112, 0, 4], 0.1, { variant: 1 }),
+  P('bike', [78, 0, 6], 0), P('bike', [128, 0, -12], Math.PI / 2, { variant: 1 }),
   P('box_shoe', [66, 0, -95], 0.2), P('box_shoe', [72, 0, -95], -0.1, { variant: 1 }), P('box_shoe', [66, 0, -84], 0.4, { variant: 2 }),
   P('domino', [92, 0, -50], 0.6), P('domino', [105, 0, -62], -0.4), P('domino', [96, 0, -70], 1.1),
   P('batt_crate', [128, 0, -100], 0.3),
@@ -179,9 +185,10 @@ const props: PropInstance[] = [
   P('dining_table', [-99, 0, 19]),
   P('chair_dining', [-106, 0, 5], Math.PI), P('chair_dining', [-92, 0, 5], Math.PI),
   P('chair_dining', [-106, 0, 33], 0), P('chair_dining', [-92, 0, 33], 0),
-  P('chair_dining', [-120, 0, 19], -Math.PI / 2), P('chair_dining', [-78, 0, 19], Math.PI / 2),
+  P('chair_dining', [-120, 0, 19], -Math.PI / 2), P('chair_dining', [-81, 0, 19], Math.PI / 2), // east chair pulled up to the table
   P('chair_dining', [-75, 0, 44], 2.5, { variant: 1 }), // the fort chair (secret 16)
-  P('stack_stairs', [-106, 0, 42], 0, { size: [6, 8.3, 8] }), // to the south-west chair
+  P('stack_stairs', [-81, 0, 29], 0, { size: [6, 8.9, 12] }), // floor → the east chair's seat
+  P('stack_stairs', [-81.9, 8.9, 19], Math.PI / 2, { size: [5, 5.1, 6.5], variant: 3 }), // seat → the table
   P('sideboard', [-134, 0, 20], -Math.PI / 2, { size: [40, 17, 8] }),
   P('china_cabinet', [-134, 17, 20], -Math.PI / 2, { size: [40, 20, 8] }),
   P('chandelier', [-99, 38, 19], 0, { size: [16, 12, 16] }),
@@ -222,9 +229,9 @@ const props: PropInstance[] = [
   P('coat_hooks', [76, 30, 51.5], Math.PI, { size: [24, 3, 1], variant: 1 }),
   P('box_shoe', [66, 0, 64], 0.1),
   // ---- Stairs + marble run
-  P('stair_run', [117, 0, 37], 0, { size: [42, 46, 64] }),
-  P('marble_run', [94, 0, 57], 0, { size: [1.6, 17.25, 24] }), // lower: z 45..69
-  P('marble_run', [94, 24.4, 20], 0, { size: [1.6, 21.6, 30], variant: 2 }), // upper: z 5..35
+  P('stair_run', [117, 0, 39], 0, { size: [44, 46, 60] }), // z 9..69, x 95..139
+  P('marble_run', [94, 0, 57], 0, { size: [1.6, 18.4, 24] }), // lower: z 45..69, top at 18.4
+  P('marble_run', [94, 26.07, 22], 0, { size: [1.6, 19.93, 26], variant: 2 }), // upper: z 9..35, from 26.07 to 46 (the bridge fills 35..45)
   // ---- Hall
   P('door_closed', [0, 0, 109.5]),
   P('hall_table', [-60, 0, 106]),
@@ -274,7 +281,7 @@ const R = (id: string, name: string, kind: RegionDef['kind'], min: Vec3, max: Ve
 const regions: RegionDef[] = [
   R('G_drawer', 'The Junk Drawer', 'secret', [-124.5, 10, -62.5], [-111.5, 20, -49.5], 'A1'),
   R('G_fridge', 'Inside the Fridge', 'secret', [-69, 0, -111], [-57, 34, -96], 'A2'),
-  R('G_stairtop', 'Top of the Stairs', 'overlook', [91, 44, 3], [139, 50, 15], 'A3'),
+  R('G_stairtop', 'Top of the Stairs', 'overlook', [91, 44, 10.4], [139, 50, 18], 'A3'),
   R('G_landing', 'The Balcony', 'overlook', [-59, 50, 49], [61, VAULT, 69], 'A3'),
   R('G_flap', 'The Dog Door', 'secret', [-28, 0, -111], [-20, 6, -104], 'A0'),
   R('G_pantry', 'Pantry', 'connector', [-49, 0, -51], [1, H, -31], 'A0'),
@@ -322,14 +329,14 @@ export const FLOOR_G: MapDef = {
   routes: [
     { id: 'RT_arrival', class: 'main', points: [[52, 0, -40], [30, 0, -40], [30, 0, -20], [0, 0, 20], [0, 0, 80], [0, 0, 104]] },
     { id: 'RT_kitchen', class: 'main', points: [[30, 0, -80], [8, 0, -80], [-24, 0, -80], [-60, 0, -80], [-92, 0, -90], [-118, 0, -50]] },
-    { id: 'RT_counter', class: 'climb', points: [[-118, 0, -45], [-129.5, 0, -33], [-129.5, 16.7, -46], [-129.5, 16.7, -90], [-100, 16.7, -105], [-95, 16.7, -103]] },
-    { id: 'RT_pantry', class: 'climb', points: [[-24, 0, -40], [-40, 0, -35], [-40, 6.5, -44], [-4, 6.5, -46]] },
-    { id: 'RT_garage', class: 'main', points: [[30, 0, -60], [80, 0, -60], [100, 0, -108], [100, 17, -95], [100, 27, -60], [100, 27, -20]] },
-    { id: 'RT_dining', class: 'climb', points: [[-99, 0, 60], [-106, 0, 47], [-106, 8.3, 40], [-106, 8.3, 33], [-99, 14, 19], [-113, 14, 19]] },
+    { id: 'RT_counter', class: 'climb', points: [[-96, 0, -85], [-127, 16.7, -85], [-129.5, 16.7, -98], [-100, 16.7, -105], [-90, 16.7, -104]] },
+    { id: 'RT_pantry', class: 'climb', points: [[-24, 0, -40], [-40, 0, -33.3], [-40, 7.2, -45.5], [-10, 7.2, -45.5]] },
+    { id: 'RT_garage', class: 'main', points: [[30, 0, -60], [80, 0, -60], [78, 0, -10], [96, 0, -4], [100, 0, 7], [100, 17, -22], [100, 27, -50], [100, 17, -92]] },
+    { id: 'RT_dining', class: 'climb', points: [[-99, 0, 60], [-81, 0, 42], [-81, 8.9, 22.3], [-78.3, 8.9, 19], [-90, 14, 19], [-113, 14, 19]] },
     { id: 'RT_fireplace', class: 'climb', points: [[30, 0, 5], [50, 0, 24], [50, 3, 21], [50, 13, 21], [52, 20.6, 12]] },
     { id: 'RT_bookcase', class: 'climb', points: [[-30, 0, 50], [-50, 0, 40], [-55, 5.9, 38], [-55, 22.4, 60], [-55, 37.4, 50], [-50, 52, 47], [-50, 52, 55]] },
-    { id: 'RT_stairs_lower', class: 'main', points: [[100, 0, 90], [94, 0, 72], [94, 17, 46]] },
-    { id: 'RT_stairs_upper', class: 'setpiece', points: [[94, 24.4, 35], [94, 46, 6]] },
+    { id: 'RT_stairs_lower', class: 'main', points: [[100, 0, 90], [94, 0, 72], [94, 18.4, 46]] },
+    { id: 'RT_stairs_upper', class: 'setpiece', points: [[94, 26.1, 35], [94, 46, 10.8]] },
     { id: 'RT_hall', class: 'main', points: [[-130, 0, 90], [-60, 0, 90], [0, 0, 90], [76, 0, 74], [130, 0, 90]] },
     { id: 'RT_bath', class: 'flank', points: [[40, 0, 40], [66, 0, 40], [76, 0, 22]] },
   ],
@@ -383,7 +390,7 @@ export const FLOOR_G: MapDef = {
       id: 'E_garage', template: 'HIGH_GROUND_TAX', region: 'G_garage',
       activation: { kind: 'region-enter', region: 'G_garage' },
       units: [
-        { type: 'sniper', at: [100, 27, -40], yaw: Math.PI / 2 },
+        { type: 'sniper', at: [100, 27, -58], yaw: Math.PI / 2 },
         { type: 'trooper', at: [95, 0, -60], yaw: Math.PI / 2 },
         { type: 'trooper', at: [105, 0, -50], yaw: Math.PI / 2 },
       ],
@@ -392,10 +399,10 @@ export const FLOOR_G: MapDef = {
       id: 'E_stairs', template: 'PICKET_LINE', region: 'G_stairtop',
       activation: { kind: 'objective', objective: 'rig_stairs' },
       units: [
-        { type: 'based', at: [102, 46, 10], yaw: Math.PI, nodes: [[99, 46, 10], [105, 46, 10]] },
-        { type: 'based', at: [116, 46, 8], yaw: Math.PI, nodes: [[113, 46, 8], [119, 46, 8]] },
-        { type: 'based', at: [128, 46, 10], yaw: Math.PI, nodes: [[125, 46, 10], [131, 46, 10]] },
-        { type: 'officer', at: [110, 46, 12], yaw: Math.PI },
+        { type: 'based', at: [102, 46, 11.5], yaw: Math.PI, nodes: [[99, 46, 11.5], [105, 46, 11.5]] },
+        { type: 'based', at: [116, 46, 11.2], yaw: Math.PI, nodes: [[113, 46, 11.2], [119, 46, 11.2]] },
+        { type: 'based', at: [128, 46, 11.5], yaw: Math.PI, nodes: [[125, 46, 11.5], [131, 46, 11.5]] },
+        { type: 'officer', at: [110, 46, 12.5], yaw: Math.PI },
       ],
     },
     {
@@ -466,7 +473,7 @@ export const FLOOR_G: MapDef = {
   ],
   interactables: [
     { id: 'use_drawer', kind: 'use', at: [-118, 11, -56], prompt: 'HOLD E — TAKE THE STRING', grants: 'string', once: true },
-    { id: 'use_gap', kind: 'use', at: [94, 17.5, 44], prompt: 'HOLD E — TIE THE RULER ACROSS', requires: 'string', lockedPrompt: 'THE RUN STOPS HERE — NEED STRING (JUNK DRAWER)', grants: 'bridge', once: true },
+    { id: 'use_gap', kind: 'use', at: [94, 18.6, 44], prompt: 'HOLD E — TIE THE RULER ACROSS', requires: 'string', lockedPrompt: 'THE RUN STOPS HERE — NEED STRING (JUNK DRAWER)', grants: 'bridge', once: true },
     { id: 'use_photo', kind: 'use', at: [52, 20.7, 5], prompt: 'HOLD E — STRAIGHTEN THE PHOTO', once: true },
     { id: 'use_record', kind: 'use', at: [-48, 0, -20], prompt: 'HOLD E — PUT THE RECORD ON' },
     { id: 'use_microwave', kind: 'use', at: [-121, 16.7, -102], prompt: 'HOLD E — TYPE THE CODE', once: true },
@@ -476,8 +483,8 @@ export const FLOOR_G: MapDef = {
   ],
   links: [
     { id: 'L_chute_up', kind: 'chute', name: 'the laundry chute', min: [55, 42, -50], max: [61, 50, -44], to: { map: 'u', spawn: [0, 0, 60], yaw: Math.PI } },
-    { id: 'L_stairs_G', kind: 'stairs', name: 'the stairs', min: [91, 44, 3], max: [139, 52, 12], to: { map: 'u', spawn: [115, 0, 10], yaw: Math.PI }, foundBy: 'climb_landing' },
-    { id: 'L_dogdoor', kind: 'door', name: 'the dog door', min: [-28, 0, -114], max: [-20, 6, -109], to: { map: 'y', spawn: [-24, 0, -118], yaw: Math.PI }, foundBy: 'flap_open' },
+    { id: 'L_stairs_G', kind: 'stairs', name: 'the stairs', min: [95, 44, 10.4], max: [139, 52, 12], to: { map: 'u', spawn: [115, 0, 10], yaw: Math.PI }, foundBy: 'g1' },
+    { id: 'L_dogdoor', kind: 'door', name: 'the dog door', min: [-28, 0, -114], max: [-20, 6, -109], to: { map: 'y', spawn: [-24, 0, -118], yaw: Math.PI }, foundBy: 'g2' },
     { id: 'L_garage', kind: 'gap', name: 'under the garage door', min: [70, 0, -114], max: [130, 3, -110], to: { map: 'y', spawn: [100, 0, -118], yaw: Math.PI } },
     { id: 'L_bstairs', kind: 'door', name: 'the basement stairs', min: [2, 0, -40], max: [15, 37, -33], to: { map: 'b', spawn: [8, 0, 0], yaw: 0 } },
   ],
@@ -500,7 +507,7 @@ export const FLOOR_G: MapDef = {
           radioDone: 'Counter\'s ours. The drawer\'s in the west run, hanging open. Books are stacked at the end — the kids\' way up.' },
         { id: 'get_string', kind: 'use', target: 'use_drawer', text: 'Take the string from the junk drawer', at: [-118, 11, -56],
           radioDone: 'String. Now the stairs. Back across the house — the run stops halfway up.' },
-        { id: 'rig_stairs', kind: 'use', target: 'use_gap', text: 'Bridge the marble run\'s gap', at: [94, 17.5, 44],
+        { id: 'rig_stairs', kind: 'use', target: 'use_gap', text: 'Bridge the marble run\'s gap', at: [94, 18.6, 44],
           radio: 'Hall, then the stairs. Follow the bands. Tie the ruler across where the run stops.',
           radioDone: 'That\'s a bridge. And that\'s every Tan in the hall hearing it. Go.' },
         { id: 'climb_landing', kind: 'reach', target: 'G_stairtop', text: 'Climb to the second floor',

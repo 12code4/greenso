@@ -295,11 +295,12 @@ function magnetTexture(): THREE.CanvasTexture {
 
 reg({
   id: 'drawer_open',
-  // A kitchen drawer pulled out and left: 12 × 8 × 12, open top; the junk inside (secret 14). Interior floor at 1.
-  dims: [12, 8, 12],
+  // A kitchen drawer pulled out and left: 12 × 2.2 × 12, open top; the junk inside (secret 14). Interior floor at 1;
+  // the sides rise 1.2 above it, so a soldier hops out (jump apex 1.35).
+  dims: [12, 2.2, 12],
   walkableTop: true,
   build() {
-    const w = 12, h = 8, d = 12;
+    const w = 12, h = 2.2, d = 12;
     const g = new THREE.Group();
     const wood = mat('WOOD_WARM', OAK);
     g.add(boxMesh(w, 1, d, wood, 0.5));
@@ -460,33 +461,29 @@ reg({
 
 reg({
   id: 'stack_stairs',
-  // Books and cereal boxes stacked as stairs. size = [w, rise, run]; rises toward −z. Risers ≤ 1.2 u.
+  // Paperbacks shingled up like roof tiles: every book is one riser (≤ 0.34 u, one auto-step), so the
+  // stack is a ramp you walk, not a ladder you jump. size = [w, rise, run]; rises toward −z. Keep run ≥ 1.3 × rise.
   dims: [4, 8, 8],
   walkableTop: true,
   build(v, size) {
     const [w, rise, run] = sz(size, [4, 8, 8]);
-    const n = Math.max(1, Math.ceil(rise / 1.15));
+    const n = Math.max(1, Math.ceil(rise / 0.34));
     const riser = rise / n;
     const tread = run / n;
+    const depth = Math.max(tread * 1.2, 3.6); // each book overhangs the one below (shingled)
     const g = new THREE.Group();
     const colliders: LocalBox[] = [];
     for (let i = 0; i < n; i++) {
       const h = riser * (i + 1);
       const z = run / 2 - tread * (i + 0.5);
-      // Each step is a pile: books (0.74 thick) with the odd cereal box
-      let y = 0;
-      let k = 0;
-      while (y < h - 0.01) {
-        const bh = Math.min(0.74, h - y);
-        const book = boxMesh(w * (0.85 + Math.random() * 0.15), bh, tread * 1.15, mat('PAPERBOARD', pickColor(v + i * 3 + k, BOOK_COLORS)), y + bh / 2);
-        book.position.set((Math.random() - 0.5) * 0.4, y + bh / 2, z + (Math.random() - 0.5) * 0.3);
-        book.rotation.y = (Math.random() - 0.5) * 0.15;
-        g.add(book);
-        y += bh;
-        k++;
-      }
+      const book = boxMesh(w * (0.9 + Math.random() * 0.1), riser, depth, mat('PAPERBOARD', pickColor(v + i * 3, BOOK_COLORS)), h - riser / 2);
+      book.position.set((Math.random() - 0.5) * 0.3, h - riser / 2, z + depth / 2 - tread / 2);
+      book.rotation.y = (Math.random() - 0.5) * 0.08;
+      g.add(book);
       colliders.push(solid(w, h, tread, h / 2, 0, z));
     }
+    // A hardcover under the foot of the run, the kids' shim
+    g.add(boxMesh(w + 0.6, 0.3, depth + 0.6, mat('PAPERBOARD', pickColor(v + 1, BOOK_COLORS)), 0.15).translateZ(run / 2 - tread / 2 + depth / 2 - 0.2));
     return { mesh: g, colliders };
   },
 });
@@ -641,7 +638,8 @@ reg({
 reg({
   id: 'marble_run',
   // The kids' marble run down the stairs: ruler-track ramp, 1.6 u wide with rails, stepped 0.3 u colliders.
-  // size = [1.6, rise, run]; rises toward −z. Variant 1 = lower half only, 2 = upper half only (the gap between).
+  // size = [1.6, rise, run]; rises toward −z. Place two pieces with a gap between for the bridge.
+  // Variant 2 = no marble parked on it (the upper piece).
   dims: [1.6, 46, 64],
   walkableTop: true,
   build(v, size) {
@@ -650,7 +648,7 @@ reg({
     const track = mat('WOOD_WARM', 0xe0c890);
     const rail = mat('PLASTIC_TOY', 0xc93a3a);
     const colliders: LocalBox[] = [];
-    const t0 = v === 2 ? 0.5 : 0, t1 = v === 1 ? 0.5 : 1;
+    const t0 = 0, t1 = 1;
     const steps = Math.ceil((rise * (t1 - t0)) / 0.3);
     const dz = (run * (t1 - t0)) / steps;
     for (let i = 0; i < steps; i++) {
@@ -719,6 +717,45 @@ reg({
     for (let i = 0; i < steps; i++) {
       const t = (i + 0.5) / steps;
       colliders.push(solid(w, rise * t, run / steps + 0.05, (rise * t) / 2, 0, run / 2 - run * t));
+    }
+    return { mesh: g, colliders };
+  },
+});
+
+reg({
+  id: 'ramp_plank',
+  // A shelf board from the garage leaned against the counter (or the car): the kids' ramp. size = [w, rise, run];
+  // rises toward −z. Stepped 0.3 u colliders — walkable at slopes ≤ 0.77 (rise/run), like the marble run.
+  dims: [3, 16.7, 24],
+  walkableTop: true,
+  build(v, size) {
+    const [w, rise, run] = sz(size, [3, 16.7, 24]);
+    const g = new THREE.Group();
+    const wood = mat('WOOD_WARM', pickColor(v, [0xc9a66b, 0xe0c890, 0x9a7a52]));
+    const slope = Math.atan2(rise, run);
+    const len = Math.hypot(rise, run);
+    const board = boxMesh(w, 0.5, len + 1, wood, 0);
+    board.position.set(0, rise / 2 - 0.25, 0);
+    board.rotation.x = slope;
+    g.add(board);
+    // Grip: rubber bands every 4 u up the board (the kids' idea)
+    for (let s = 2; s < len - 1; s += 4) {
+      const t = s / len;
+      const band = boxMesh(w + 0.2, 0.25, 0.4, mat('RUBBER_MATTE', pickColor(Math.round(s), [0xd9c26b, 0xc93a3a, 0x3c9a4a])), 0);
+      band.position.set(0, rise * t + 0.08, run / 2 - run * t);
+      band.rotation.x = slope;
+      g.add(band);
+    }
+    // A book wedged under the foot so it can't kick out
+    const wedge = boxMesh(w + 1, 0.8, 3, mat('PAPERBOARD', pickColor(v + 2, BOOK_COLORS)), 0.4);
+    wedge.position.set(0, 0.4, run / 2 - 1.2);
+    g.add(wedge);
+    const colliders: LocalBox[] = [];
+    const steps = Math.ceil(rise / 0.3);
+    const dz = run / steps;
+    for (let i = 0; i < steps; i++) {
+      const t = (i + 0.5) / steps;
+      colliders.push(solid(w, rise * t, dz + 0.05, (rise * t) / 2, 0, run / 2 - run * t));
     }
     return { mesh: g, colliders };
   },
@@ -1410,7 +1447,9 @@ reg({
 reg({
   id: 'car_sedan',
   // A 1990s family sedan: 4.5 × 1.8 × 1.45 m → 83 × 33 × 27 u. Long axis along z, nose to −z.
-  // 3 u of clearance underneath (the canyon), hood at 17, roof at 27.
+  // 3 u of clearance underneath (the canyon), hood at 17, roof at 27. The windshield and rear glass are
+  // raked at 0.77 (rise 10 over 13) with stepped colliders: trunk → rear glass → roof → windshield → hood is a walk.
+  // Local z: hood −41.5..−25, windshield −25..−12, roof −12..13, rear glass 13..26, trunk 26..41.5.
   dims: [33, 27, 83],
   walkableTop: true,
   cover: 'BW',
@@ -1419,22 +1458,33 @@ reg({
     const g = new THREE.Group();
     const paint = mat('METAL_KITCHEN', pickColor(v, [0x7a1f24, 0x2a4a7a, 0x6a6e72, 0x1e5a3a]));
     const glass = mat('GLASS_CHEAP', 0x88aacc);
+    const dark = mat('FABRIC_SOFT', 0x2a2622);
     const colliders: LocalBox[] = [];
     g.add(boxMesh(w, 14, len, paint, 3 + 7)); // chassis 3..17
     colliders.push(solid(w, 14, len, 10));
-    const cabin = boxMesh(w - 4, 10, 40, paint, 17 + 5);
-    cabin.position.z = 4;
+    const cabin = boxMesh(w - 4, 10, 25, paint, 17 + 5);
+    cabin.position.z = 0.5;
     g.add(cabin);
-    colliders.push(solid(w - 4, 10, 40, 22, 0, 4));
-    for (const [z, sd] of [[-15.5, 1], [23.5, 1]]) {
-      const wind = boxMesh(w - 6, 8.5, 0.4, glass, 22);
-      wind.position.z = z;
-      wind.rotation.x = z < 0 ? 0.5 : -0.5;
+    colliders.push(solid(w - 4, 10, 25, 22, 0, 0.5));
+    g.add(boxMesh(w - 5, 3, 43, dark, 18.5).translateZ(0.5)); // dash + parcel shelf under the glass
+    const rake = Math.atan2(10, 13);
+    const glassLen = Math.hypot(10, 13);
+    for (const [zc, sign] of [[-18.5, 1], [19.5, -1]]) {
+      const wind = boxMesh(w - 6, 0.4, glassLen + 0.4, glass, 0);
+      wind.position.set(0, 22, zc);
+      wind.rotation.x = sign * rake;
       g.add(wind);
-      void sd;
+      // Stepped colliders up the rake: 0.3 u risers over 0.39 u — one auto-step each
+      const steps = Math.ceil(10 / 0.3);
+      for (let i = 0; i < steps; i++) {
+        const t = (i + 0.5) / steps;
+        const y = 17 + 10 * t;
+        const z = sign > 0 ? -25 + 13 * t : 26 - 13 * t;
+        colliders.push(solid(w - 6, y - 17, 13 / steps + 0.05, 17 + (y - 17) / 2, 0, z));
+      }
     }
     for (const x of [-(w - 4) / 2 - 0.2, (w - 4) / 2 + 0.2]) {
-      for (const z of [-6, 12]) {
+      for (const z of [-6, 7]) {
         const win = boxMesh(0.4, 7, 14, glass, 22.5);
         win.position.set(x, 22.5, z);
         g.add(win);
@@ -1465,7 +1515,7 @@ reg({
     g.add(plate);
     // A mirror, an antenna
     const antenna = cylMesh(0.12, 12, mat('METAL_KITCHEN', STEEL), 17 + 6, 6);
-    antenna.position.set(w / 2 - 2, 23, -18);
+    antenna.position.set(w / 2 - 2, 23, -30);
     g.add(antenna);
     return { mesh: g, colliders };
   },

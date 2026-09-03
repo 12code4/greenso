@@ -20,6 +20,12 @@ const FREE = {
     ['kitchen-wide', -60, 30, -40, -Math.PI * 0.7, 0.4],
     ['garage-wide', 130, 30, 5, Math.PI * 0.85, 0.4],
     ['hall-wide', 120, 25, 105, -Math.PI * 0.6, 0.3],
+    // the kid-logic climbs
+    ['climb-plank-kitchen', -95, 14, -70, Math.atan2(-17, -15), 0.2],
+    ['climb-car', 125, 20, 20, Math.atan2(-25, -40), 0.15],
+    ['climb-dining-chair', -60, 16, 40, Math.atan2(-21, -18), 0.2],
+    ['climb-stairs-top', 94, 40, 60, Math.atan2(6, -48), -0.1],
+    ['stairwell-up', 117, 6, 85, Math.PI, -0.45],
   ],
 };
 const SPOTS = {
