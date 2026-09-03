@@ -31,11 +31,12 @@
 
 | ID | Name | Kind | min → max (x, y, z) | Band | Floor | Summit | Landmarks | Checkpoint |
 |---|---|---|---|---|---|---|---|---|
-| `G_backhall` | Back Hall | connector | (1, 0, −111) → (61, 50, −31) | A0 | tile | coat hooks 30 | THE CHUTE DOOR, the basement door | (53, 0, −40) arrival |
+| `G_vestibule` | Vestibule | connector | (1, 0, −111) → (16, 50, −31) | A0 | tile | — | THE BASEMENT DOOR (south end; leads down, not built) | — |
+| `G_backhall` | Back Hall | connector | (16, 0, −111) → (61, 50, −31) | A0 | tile | coat hooks 30 | THE CHUTE DOOR (closet at x 45..61, z −50..−31), the back door | (47, 0, −40) arrival |
 | `G_kitchen` | Kitchen | arena | (−139, 0, −111) → (−49, 50, −31) | A0–A2 | tile | fridge top 33, upper cabinets 39 | THE COUNTER, THE FRIDGE, THE DRAWER, the island, the toaster | (−60, 0, −45) |
 | `G_drawer` | The Junk Drawer | secret | (−136, 10, −62) → (−122, 20, −50) | A1 | — | — | THE DRAWER | — |
 | `G_fridge` | Inside the Fridge | secret | (−70, 0, −97) → (−56, 34, −83) | A0–A2 | — | shelf 3 | the cake | — |
-| `G_pantry` | Pantry | connector | (−49, 0, −51) → (1, 50, −31) | A0–A2 | tile | shelf 3 at 33 | the flour tin | — |
+| `G_pantry` | Pantry | connector | (−49, 0, −51) → (1, 50, −31) | A0–A2 | tile | top tier at 33 | the flour tin | — |
 | `G_mudroom` | Mudroom | connector | (−49, 0, −111) → (1, 50, −51) | A0 | tile | bench 8 | THE DOG DOOR, Biscuit's bed | (−24, 0, −80) |
 | `G_garage` | Garage | arena | (61, 0, −111) → (139, 50, 9) | A0–A2 | concrete | car roof 27 | THE CAR, the tool wall, the garage door gap | (100, 0, 0) |
 | `G_dining` | Dining Room | arena | (−139, 0, −31) → (−59, 50, 69) | A0–A2 | hardwood | china cabinet 37 | THE TABLE, the sideboard, the chandelier | (−99, 0, 50) |
@@ -69,7 +70,7 @@ Bands: A0 floor · A1 seat/drawer height (8–14) · A2 counter/table (14–39) 
 | `fridge` (open, variant 1) | (−63, 0, −104), 14 × 33 × 14 | door swung toward −x | interior shelves 8/16/24 (climbable) → the cake on 16; top 33 = `SQ_toast` landing + marble |
 | `island` | (−92, 0, −70), 25 × 16.7 × 20 | + 3 `stool` (6 ⌀ × 12) on the south side | mesa with stool steps: floor → stool 12 → island 16.7 |
 | `stack_stairs` | (−118, 0, −45), rise 16.7 | cereal boxes and hardcovers stacked as stairs to the west counter's end | the kid's route up; risers ≤ 1.2 |
-| `pantry_shelf` ×2 | (−46, 0, −41) yaw π/2, size 20 × 37 × 6 · (−2, 0, −41) yaw −π/2 | tiers 11/22/33 | `stack_stairs` at (−30, 0, −34) rise 11; flour tin at tier 2 = pocket spot |
+| `pantry_shelf` | (−24, 0, −47) yaw π, size 44 × 37 × 6 | tiers every 6.5 (35 cm); a can (2.2) and a cereal box on its side (4.4) at the end of each tier are the two hops to the next | `stack_stairs` at (−40, 0, −38) rise 6.5; flour tin at tier 2 = pocket spot |
 | `bench_mud` + `boot_rain` ×2 + `coat_hooks` | bench (−40, 0, −60) 20 × 8 × 7; boots under; hooks (−24, 30, −53) size 40 | | `dog_bed` at (−38, 0, −70) 15 × 3 × 12; `keychain_pet` on the hooks |
 | `chute_closet` | walls at x 45..61, z −50..−31 with a door at (53, 0, −31) | the chute opening on its east wall at y 10, 6 wide; `rope_knots` up the shaft to y 46 | `L_chute_up` trigger at y 44 |
 | `door_closed` | basement (37.5, 0, −111); back door (47.5, 0, −111); front (0, 0, 111) | 15 × 37 × 1 | knob 18.5 |
@@ -186,8 +187,25 @@ Par: G1 260 s, G2 150 s.
 
 ## 10. QA deltas (06 §8)
 
+- **Conventions as built:** camera yaw π faces north (−z), yaw 0 faces south; a prop with yaw 0 faces −z (its local front); `yawToward` returns the yaw that looks from A to B. Every unit and prop yaw in `g.ts` follows this.
+- The camera can never rise above a 50 u wall, so overhead checks use the free-cam (`__game.freeCam`, `tools/tour.mjs g-top`), not the rig.
+- Headless renders at ~1 fps; every gate loads `?turbo` (six 0.05 s sim steps per frame) or it takes hours.
+
 - Camera under 50 u ceilings is fine (boom ≤ 6 u); the vault needs no special case. Doorways 15 wide × 37 tall never pinch the boom.
 - Every summit has a ≤ 1.3 u step route (book stacks, stool, hearth ledges, rope knots): P1 must prove all `climb` routes.
 - `RT_stairs_upper` is only reachable with the bridge: the walk gate spawns it via the `__game.give('bridge')` hook.
 - Prop count ≈ 900 instances; collision boxes ≈ 1100. Watch the frame-time graph; instancing later (decision 14).
 - Loading links to B, U and Y show the not-built card and return the player; the links still count as found.
+
+## 11. As built — deviations from the contract (2026-09-03, P1–P3)
+
+Logged per the traceability rule (06 §3): where `g.ts` differs from §2–§3 above, the def is right and this list says why.
+
+- **Vestibule.** The basement door moved off the exterior north wall (a door in an outside wall can't lead down) into a new `G_vestibule` strip, x 1..16, between the mudroom and the back hall: mudroom↔vestibule door at z −80 (wall x 1), a 20-wide opening vestibule↔backhall at z −90 (wall x 16), and `door_closed` v1 BASEMENT at the vestibule's south end (8.5, 0, −32.6) with link `L_bstairs`. The back hall is x 16..61; the arrival spawn is (47, 0, −40) at the chute-closet door, facing west.
+- **Openings.** Backhall↔living door at x 35 (clear of the chute closet); bath↔living door at z 40; kitchen west window z −85..−55 over the west counter; dining west window z −25..−5 so the sideboard and china cabinet (z 0..40) sit under a plain wall; a backhall window x 18..30.
+- **Kitchen.** North counter run x −135..−80 (size 55) with the stove at (−74.5) and the fridge at (−63) completing the wall; microwave (−125), faucet (−100), toaster (−95) on the north run; the open junk drawer protrudes east from the west run at (−118, 10, −56) (interior floor 11, rim 18); island at (−92, 0, −70) with three stools along its south side; book/cereal stack stairs to the west run's south end at (−129.5, 0, −37.5), rise 16.7 over 11.
+- **Pantry.** One shelf unit on the north wall, tiers every 6.5 u with built-in can-and-cereal-box hops; stack stairs (−40, 0, −38) rise 6.5.
+- **Living room.** TV cabinet + CRT + VCR on the north wall at (12, 0, −26) facing south; couch at (12, 0, 12) facing the TV; coffee table (12, 0, −10). The climbing bookcase is on the **west** wall at (−56, 0, 50) (z 35..65) with the knotted rope at (−50, 37, 48) hanging through a **gap in the balcony rail** (x −53..−47): bookcase top → rope knots → onto the slab through the gap. A second bookcase on the east wall at (56, 0, 58) carries the piggy bank. Fireplace at (57, 0, 5) facing west; its stone ledge steps climb the **south** cheek; crooked photo at (56.4, 24, 5).
+- **Stairs.** Staircase 42 wide at x 96..138; the marble run at x 94 in two pieces — lower (94, 0, 57) size 1.6 × 17.25 × 24 (z 45..69) and upper (94, 24.4, 20) size 1.6 × 21.6 × 30 (z 5..35) — with the 10 u gap bridged by `ruler_bridge` at (94, 17.25, 40) when `use_gap` fires (a permanent WorldState flag `bridge`).
+- **Closet.** The vacuum-hose warp lands on the balcony (0, 52.2, 62) until the upstairs linen closet exists.
+- **Life props** were topped up after a per-room audit (`tools` note in the ship log): every full room carries ≥ 12; the small closets carry 4–6.

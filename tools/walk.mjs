@@ -12,7 +12,7 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-await page.goto(`http://127.0.0.1:4173/?test&map=${MAP}&noenemies`, { waitUntil: 'networkidle' });
+await page.goto(`http://127.0.0.1:4173/?test&turbo&map=${MAP}&noenemies`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(1000);
 const api = (expr, arg) => page.evaluate(expr, arg);
 const gameTime = () => api(() => window.__game.time());

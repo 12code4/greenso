@@ -60,9 +60,13 @@ export function groundTexture(kind: string): THREE.CanvasTexture {
         for (let i = 0; i <= 256; i += 128) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 256); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(256, i); g.stroke(); }
       });
     case 'carpet':
-      return noiseTexture('carpet', [150, 70, 62], 34, (g) => {
-        g.fillStyle = 'rgba(60, 20, 18, 0.25)';
-        for (let i = 0; i < 400; i++) g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+      return noiseTexture('carpet', [214, 210, 204], 30, (g) => {
+        g.fillStyle = 'rgba(80, 76, 72, 0.18)';
+        for (let i = 0; i < 500; i++) g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+        // a woven border
+        g.strokeStyle = 'rgba(255, 245, 225, 0.35)';
+        g.lineWidth = 6;
+        g.strokeRect(8, 8, 240, 240);
       });
     case 'concrete':
       return noiseTexture('concrete', [154, 150, 144], 26, (g) => {

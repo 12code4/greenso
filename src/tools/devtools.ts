@@ -33,6 +33,19 @@ export class DevTools {
     }
   }
 
+  /** Scripts: park the free-cam at an exact vantage (photo tours). */
+  place(pos: THREE.Vector3, yaw: number, pitch: number, cam: ThirdPersonCamera): void {
+    this.freeCam = true;
+    this.freePos.copy(pos);
+    this.freeYaw = yaw;
+    this.freePitch = pitch;
+    cam.camera.position.copy(pos);
+    cam.camera.rotation.set(0, 0, 0);
+    cam.camera.rotation.order = 'YXZ';
+    cam.camera.rotation.y = yaw;
+    cam.camera.rotation.x = pitch;
+  }
+
   /** Returns true when the free-cam has taken over the camera this frame. */
   update(dt: number, input: Input, cam: ThirdPersonCamera, player: Player, hud: Hud): boolean {
     if (input.pressed('F9')) {

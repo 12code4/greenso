@@ -9,7 +9,7 @@ async function run(query, steps) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
   page.on('console', (m) => { if (m.type() === 'error') console.log('[console]', m.text()); });
-  await page.goto(`http://127.0.0.1:4173/?test&map=g${query}`, { waitUntil: 'networkidle' });
+  await page.goto(`http://127.0.0.1:4173/?test&turbo&map=g${query}`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
   const api = (expr) => page.evaluate(expr);
   const state = () => api('window.__game.state()');

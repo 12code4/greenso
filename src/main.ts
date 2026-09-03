@@ -36,6 +36,8 @@ import { v3, pick } from './core/math';
 const params = new URLSearchParams(location.search);
 const TEST_MODE = params.has('test');
 const NO_ENEMIES = params.has('noenemies'); // route-walk gate: geometry only
+// Headless gates render at ~1 fps; ?turbo runs several fixed 0.05 s sim steps per rendered frame (same numerics, faster wall clock)
+const TURBO_STEPS = params.has('turbo') ? 6 : 1;
 const MAP_ID = params.get('map') ?? DEFAULT_MAP;
 const mapDef = MAPS[MAP_ID] ?? MAPS[DEFAULT_MAP];
 const FROM_LINK = params.get('from');
@@ -480,6 +482,8 @@ if (TEST_MODE) {
     heal: () => player.heal(100),
     setYaw: (y: number) => { cam.yaw = y; },
     setPitch: (p: number) => { cam.pitch = p; },
+    freeCam: (x: number, y: number, z: number, yaw: number, pitch: number) => devtools.place(new THREE.Vector3(x, y, z), yaw, pitch, cam),
+    freeCamOff: () => { devtools.freeCam = false; },
     give: (id: 'flamer' | 'bazooka' | 'sniper') => { weapons.unlock(id); weapons.addFuel(200); weapons.addRockets(8); weapons.addBands(12); },
     flag: (f: string) => { missionFlags.add(f); if (f === 'bridge') placeBridge(); },
     use: (id: string) => interact.trigger(id),
@@ -521,6 +525,7 @@ if (TEST_MODE) {
       shots: weapons.stats.shots,
       hits: weapons.stats.hits,
       boomPulled: cam.boomPulledFrac,
+      cam: cam.camera.position.toArray().map((v) => +v.toFixed(1)),
       checkpoint: map.regions.checkpoint.toArray(),
       waypoint: waypoint.target?.toArray() ?? null,
       suspicious: enemies.list.filter((e) => e.alive && e.state === 'suspicious').length,
@@ -541,6 +546,13 @@ let deployed = false;
 
 function frame(): void {
   const rawDt = clock.getDelta();
+  for (let step = 0; step < TURBO_STEPS; step++) simulate(rawDt);
+  hud.perf(rawDt * 1000);
+  renderer.render(scene, cam.camera);
+  requestAnimationFrame(frame);
+}
+
+function simulate(rawDt: number): void {
   const dt = Math.min(rawDt, 0.05);
   time += dt;
 
@@ -614,6 +626,11 @@ function frame(): void {
     if (mission) mission.update(dt, { playerPos: player.pos, regions: map.regions, director, isFreed: (id) => pows.isFreed(id), isUsed: (id) => interact.used.has(id), hasFlag });
     audio.setCombat(enemies.anyInCombat() || aircraft.planes.length > 0);
     audio.loop('flame', weapons.firingFlame && player.alive, 0.5);
+    // Room motif: the fridge hums (docs/10 §2.6). Louder as you get close.
+    if (mapDef.id === 'g') {
+      const dFridge = Math.hypot(player.pos.x + 63, player.pos.z + 104);
+      audio.loop('fridge', dFridge < 60, Math.max(0.05, 0.35 * (1 - dFridge / 60)));
+    }
     barks.update(dt);
     if (killStreakT > 0) killStreakT -= dt;
 
@@ -649,10 +666,7 @@ function frame(): void {
 
   audio.update(dt);
   hud.update(dt);
-  hud.perf(rawDt * 1000);
   input.endFrame();
-  renderer.render(scene, cam.camera);
-  requestAnimationFrame(frame);
 }
 
 requestAnimationFrame(frame);

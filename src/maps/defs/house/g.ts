@@ -242,6 +242,31 @@ const props: PropInstance[] = [
   P('chalk_arrow', [104, 0, 80], -Math.PI / 2 + 0.9), // toward the marble run's foot
   P('chalk_arrow', [-122, 0, -40], 0), // toward the counter stairs
   P('book_hard', [110, 0, 100], 0.2, { variant: 4 }), P('box_juice', [116, 0, 100], 0.3),
+  // ---- Decoration With Heart top-ups (docs/10 §8): every room carries the family's traces
+  // mudroom
+  P('sock', [-20, 0, -95], 0, { variant: 1 }), P('sock', [-36, 8.5, -64], 0, { variant: 3 }),
+  P('note_paper', [-47.6, 28, -70], -Math.PI / 2, { variant: 3 }), P('umbrella_stand', [-8, 0, -106]), P('mail_pile', [-44.5, 8.6, -76]),
+  // back hall
+  P('shoe_pair', [40, 0, -100], 0.6, { variant: 2 }), P('key_hook', [25, 24, -109.4], Math.PI), P('clock_wall', [50, 40, -32.5]),
+  P('sock', [44, 0, -36], 0, { variant: 2 }), P('sock', [42, 0, -44], 0, { variant: 4 }), P('drawing_taped', [22, 26, -32.5], 0, { variant: 2 }),
+  P('box_juice', [20, 0, -36], 0.4), P('book_paper', [35, 0, -98], 0.9, { variant: 2 }),
+  // dining
+  P('note_paper', [-137.9, 28, -10], -Math.PI / 2, { variant: 4 }), P('clock_wall', [-80, 42, -29.5], Math.PI), P('calendar', [-100, 30, 67.5]),
+  P('book_hard', [-120, 8.7, 19], 0.3, { variant: 2 }), P('mail_pile', [-90, 14.05, 22]), P('sock', [-125, 0, 55], 0, { variant: 0 }),
+  P('magazine_stack', [-70, 0, 60]), P('can_soda', [-96, 14, 14], 0.4, { variant: 2 }),
+  // bath
+  P('book_paper', [68, 15.3, 43], 0.2, { variant: 3 }), P('sock', [72, 0, 20], 0, { variant: 1 }), P('duck_rubber', [80, 0, 38], 2.1), P('drawing_taped', [89.4, 24, 30], Math.PI / 2, { variant: 0 }),
+  // hall closet
+  P('shoe_pair', [66, 0, 58], 0.2, { variant: 0 }), P('shoe_pair', [70, 0, 64], -0.4, { variant: 3 }), P('umbrella_stand', [86, 0, 55]), P('sock', [80, 0, 62], 0, { variant: 2 }),
+  // pantry
+  P('can_soda', [-20, 0, -35], 0, { variant: 1 }), P('can_soda', [-14, 0, -37], 0, { variant: 3 }), P('box_juice', [-30, 0, -34], 0.2), P('note_paper', [-0.5, 26, -41], Math.PI / 2, { variant: 5 }),
+  // vestibule
+  P('shoe_pair', [10, 0, -100], 0.3, { variant: 1 }), P('boot_rain', [6, 0, -104], 0.1, { variant: 1 }), P('note_paper', [14.5, 28, -60], Math.PI / 2, { variant: 2 }),
+  P('drawing_taped', [2.5, 26, -50], -Math.PI / 2, { variant: 2 }), P('sock', [8, 0, -45], 0, { variant: 3 }),
+  // stairs
+  P('book_hard', [110, 3.3, 64], 0.4, { variant: 1 }), P('book_hard', [120, 6.6, 59], -0.3, { variant: 5 }), P('sock', [126, 9.9, 55], 0, { variant: 4 }), P('box_juice', [116, 0, 30], 0.6),
+  // garage
+  P('can_lying', [120, 0, -80], 1.4, { variant: 1 }), P('sock', [70, 0, -30], 0, { variant: 0 }), P('note_paper', [137.4, 12, -20], Math.PI / 2, { variant: 7 }),
 ];
 
 // ---------------------------------------------------------------- regions
@@ -284,9 +309,9 @@ export const FLOOR_G: MapDef = {
       { kind: 'concrete', min: [61, 0, -111], max: [139, 0, 9], height: 0.04 },
       { kind: 'concrete', min: [88, 0, -70], max: [112, 0, -40], height: 0.06, color: 0x5a5652 }, // the oil stain
       { kind: 'tile', min: [61, 0, 9], max: [91, 0, 49], height: 0.04, color: 0xdde6ee },
-      { kind: 'carpet', min: [-30, 0, -25], max: [50, 0, 30], height: 0.08, color: 0x8a3a34 }, // the living room rug
-      { kind: 'carpet', min: [-120, 0, 0], max: [-78, 0, 38], height: 0.08, color: 0x5a6a8a }, // under the dining table
-      { kind: 'carpet', min: [-100, 0, 84], max: [100, 0, 96], height: 0.08, color: 0x6a5a8a }, // the hall runner
+      { kind: 'carpet', min: [-30, 0, -25], max: [50, 0, 30], height: 0.08, color: 0xa85048 }, // the living room rug
+      { kind: 'carpet', min: [-120, 0, 0], max: [-78, 0, 38], height: 0.08, color: 0x7a8aa8 }, // under the dining table
+      { kind: 'carpet', min: [-100, 0, 84], max: [100, 0, 96], height: 0.08, color: 0x8a78a8 }, // the hall runner
       { kind: 'tile', min: [16, 0, -111], max: [61, 0, -31], height: 0.04, color: 0xe8e2d2 },
     ],
     masses,

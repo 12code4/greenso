@@ -148,14 +148,16 @@ export class AudioEngine {
       src.loop = true;
       const f = ctx.createBiquadFilter();
       f.type = 'bandpass';
-      f.frequency.value = name === 'sprinkler' ? 2600 : name === 'flame' ? 620 : 800;
-      f.Q.value = name === 'flame' ? 0.5 : 0.8;
+      f.frequency.value = name === 'sprinkler' ? 2600 : name === 'flame' ? 620 : name === 'fridge' ? 120 : name === 'furnace' ? 90 : 800;
+      f.Q.value = name === 'flame' ? 0.5 : name === 'fridge' || name === 'furnace' ? 6 : 0.8;
       const g = ctx.createGain();
       g.gain.setValueAtTime(0, ctx.currentTime);
       g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.4);
       src.connect(f).connect(g).connect(this.sfx);
       src.start();
       this.loops.set(name, { src, gain: g });
+    } else if (on && cur) {
+      cur.gain.gain.setTargetAtTime(gain, ctx.currentTime, 0.3);
     } else if (!on && cur) {
       cur.gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
       const s = cur.src;
