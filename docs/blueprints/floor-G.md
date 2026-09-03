@@ -197,6 +197,8 @@ Par: G1 260 s, G2 150 s.
 - Prop count ≈ 900 instances; collision boxes ≈ 1100. Watch the frame-time graph; instancing later (decision 14).
 - Loading links to B, U and Y show the not-built card and return the player; the links still count as found.
 
+**Walk-gate conventions added while building G.** Climb routes carry one waypoint per hop (every fireplace ledge; every bookcase shelf's tallest stack, then the board above) so the autopilot walks, not sprints, into a 1.1–1.2 riser and jumps at the right moment; climb legs get 22 game-seconds against 14 for main routes. Setpiece routes (`RT_stairs_upper`, `RT_rope`) are skipped by the walk gate and proven by `house-g.mjs` or by hand.
+
 ## 11. As built — deviations from the contract (2026-09-03, P1–P3)
 
 Logged per the traceability rule (06 §3): where `g.ts` differs from §2–§3 above, the def is right and this list says why.

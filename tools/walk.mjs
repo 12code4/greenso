@@ -32,7 +32,8 @@ for (const route of routes) {
     await api(([px, py, pz]) => window.__game.walkTo(px, py, pz), [px, py, pz]);
     const legStart = await gameTime();
     let ok = false;
-    while ((await gameTime()) - legStart < 14) {
+    const budget = route.class === 'climb' ? 22 : 14; // hops are slow: stuck-detect, jump, cooldown
+    while ((await gameTime()) - legStart < budget) {
       await page.waitForTimeout(120);
       const s = await api(() => window.__game.state());
       pulled += s.boomPulled; samples++;
