@@ -37,10 +37,11 @@ await api('window.__game.clearEncounter("E_gnome")');
 await api('window.__game.activate("E_stream")');
 await api('window.__game.teleport(24, 0, 29.8)');
 await api('window.__game.setYaw(Math.PI)'); // camera facing north
-await api('window.__game.key("KeyC", true)'); await gameWait(0.3); await api('window.__game.key("KeyC", false)');
-await gameWait(3.0);
+await api('window.__game.key("KeyC", true)'); // crouch is a hold
+await gameWait(3.3);
 s = await state();
-check('crouched & still behind a picket: no combat in 3 s', !s.combat, `combat=${s.combat} suspicious=${s.suspicious} hp=${s.hp}`);
+check('crouched & still behind a picket: no combat in 3 s', !s.combat, `combat=${s.combat} suspicious=${s.suspicious} hp=${s.hp} crouched=${s.crouched}`);
+await api('window.__game.key("KeyC", false)');
 
 // 3. Sprint NORTH straight past him up the open road: they lock on, and no damage lands for ≥0.5 s after
 await api('window.__game.heal()');

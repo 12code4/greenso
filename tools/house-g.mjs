@@ -105,7 +105,7 @@ await run('&mission=g1&noenemies', async ({ api, state, gameWait }) => {
   await api('window.__game.teleport(-48, 0, -20)');
   await gameWait(0.5);
   await api('window.__game.use("use_record")');
-  await api('window.__game.teleport(-121, 16.8, -102)');
+  await api('window.__game.teleport(-126.5, 16.8, -60)');
   await gameWait(0.5);
   await api('window.__game.use("use_microwave")');
   await api('window.__game.teleport(82, 0, 54)');

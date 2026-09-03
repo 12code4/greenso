@@ -84,6 +84,7 @@ Deferred: a pose-snap **weapon-switch flourish** and an aim-down-sights hand pos
 - **Compass strip** under the objective label: a pin on a 180° strip with the distance in *inches* (1 u = 2.13 in), amber and "BEHIND YOU" when the target is behind.
 - **Visible trail**: Fern's markers are now a glowing yellow band on the ground *and* one hung on a 1.7 u twig, readable above over-head grass. **Chalk arrows** at both brick steps, at the trail's turn into the Gnome, and at the hose tear.
 - **Checkpoint per objective**: completing any objective sets the respawn point where you stand ("CHECKPOINT"). Dying in the convoy raid no longer replays the climb.
+- **Toy on the lawn** (added with the house's sentry scan, 2026-09-03): idle sentries sweep their gaze ±50°, which would have made standing anywhere in the open a lock-on eventually. So a *still, kneeling* soldier beyond 8 u is invisible to an idle Tan — only one already searching can pick him out at range. Crouch behind the picket stays a real tactic; sprinting past still gets you shouted at.
 - **Dive-tackle**: sprint + C into a Tan topples molded ones and shoves articulated ones (30 dmg, 1.2 s of no fire). The `divedInto` flag finally has a consumer.
 - **Minimal options**: `[` `]` look sensitivity, `I` invert Y, `M` mute, persisted in `localStorage`. Listed under H.
 - Gate: new `fairplay.mjs` (pin + checkpoint, crouched-behind-a-pocket stays unseen 3 s, sprint-in shows the suspicious step and a ≥0.5 s grace, dive-tackle topples).

@@ -494,6 +494,7 @@ if (TEST_MODE) {
     use: (id: string) => interact.trigger(id),
     resetWorld: () => worldState.reset(),
     activate: (id: string) => director.activate(id),
+    enemyList: () => enemies.list.map((e) => ({ type: e.type, enc: e.encounter, alive: e.alive, state: e.state, yaw: +e.yaw.toFixed(2), homeYaw: +e.homeYaw.toFixed(2), pos: e.pos.toArray().map((v) => +v.toFixed(1)), dist: +e.pos.distanceTo(player.pos).toFixed(1), fireT: +e.fireT.toFixed(2), burst: e.burst, suspicion: +e.suspicion.toFixed(2), sinceSeen: +e.sinceSeen.toFixed(1) })),
     // Flow tests: force-clear an encounter (combat is gated separately)
     clearEncounter: (id: string) => {
       for (const e of enemies.list) if (e.alive && e.encounter === id) enemies.damage(e, 9999, new THREE.Vector3(0, 0, 1));

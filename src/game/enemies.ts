@@ -454,7 +454,11 @@ export class EnemyManager implements Hittable {
             const distK = clamp(1 - dist / stats.sight, 0, 1);
             const still = player.vel.x * player.vel.x + player.vel.z * player.vel.z < 0.4;
             const stance = player.sprinting ? 1.7 : player.crouched ? 0.45 : still ? 0.6 : 1;
-            const rate = (1 - conceal) * (0.3 + 2.0 * distK) * stance; // glimpses per second
+            // Fair play (docs/09 U3): a still, kneeling soldier beyond 8 u is a toy on the lawn to an idle sentry —
+            // only a Tan already searching can pick him out at range. Sentries sweep their gaze, so this is what
+            // keeps "crouch behind the picket" a real tactic.
+            const toy = e.state === 'idle' && player.crouched && still && dist > 8;
+            const rate = toy ? 0 : (1 - conceal) * (0.3 + 2.0 * distK) * stance; // glimpses per second
             glimpse = dist < 3.5 || Math.random() < rate * dt;
           }
         }

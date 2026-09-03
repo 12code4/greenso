@@ -139,12 +139,12 @@ const props: PropInstance[] = [
   P('fridge', [-63, 0, -104], Math.PI, { variant: 1 }),
   P('faucet', [-100, 16.7, -108.5]),
   P('toaster', [-95, 16.7, -104]),
-  P('microwave', [-125, 16.7, -105], Math.PI),
+  P('microwave', [-131.5, 16.7, -60], -Math.PI / 2), // on the west run, facing east (the corner stays walkable)
   P('drawer_open', [-118, 10, -56], -Math.PI / 2),
   P('island', [-92, 0, -70]),
   P('stool', [-100, 0, -56]), P('stool', [-92, 0, -56]), P('stool', [-84, 0, -56]),
   P('ramp_plank', [-112, 0, -85], Math.PI / 2, { size: [3, 16.7, 24] }), // leaned on the west counter's front: the kids' way up
-  P('box_cereal', [-88, 16.7, -66], 0.3), P('cup_mug', [-96, 16.7, -75], 0), P('cup_mug', [-120, 16.7, -103], 1.2),
+  P('box_cereal', [-88, 16.7, -66], 0.3), P('cup_mug', [-96, 16.7, -75], 0), P('cup_mug', [-118, 16.7, -107.5], 1.2),
   P('can_soda', [-88, 16.7, -64], 0), P('dog_bowl', [-58, 0, -40], 0), P('dog_bowl', [-52, 0, -40], 0, { variant: 1 }),
   P('clock_wall', [-90, 42, -33]), P('calendar', [-56, 30, -32.6], Math.PI), P('note_paper', [-51, 26, -80], -Math.PI / 2, { variant: 5 }),
   P('plant_floor', [-134, 0, -36], 0, { variant: 1 }),
@@ -330,7 +330,7 @@ export const FLOOR_G: MapDef = {
   routes: [
     { id: 'RT_arrival', class: 'main', points: [[52, 0, -40], [30, 0, -40], [30, 0, -20], [0, 0, 20], [0, 0, 80], [0, 0, 104]] },
     { id: 'RT_kitchen', class: 'main', points: [[30, 0, -80], [8, 0, -80], [-24, 0, -80], [-60, 0, -80], [-92, 0, -90], [-118, 0, -50]] },
-    { id: 'RT_counter', class: 'climb', points: [[-96, 0, -85], [-127, 16.7, -85], [-131, 16.7, -98], [-132, 16.7, -109.5], [-110, 16.7, -109.5], [-105, 16.7, -101.5], [-88, 16.7, -101.5]] }, // behind the microwave, in front of the faucet and toaster
+    { id: 'RT_counter', class: 'climb', points: [[-96, 0, -85], [-127, 16.7, -85], [-131, 16.7, -98], [-128, 16.7, -104], [-105, 16.7, -103.5], [-100, 16.7, -101.5], [-88, 16.7, -101.5]] }, // round the corner, in front of the faucet and toaster
     { id: 'RT_pantry', class: 'climb', points: [[-24, 0, -40], [-40, 0, -33.3], [-40, 7.2, -45.5], [-10, 7.2, -45.5]] },
     { id: 'RT_garage', class: 'main', points: [[30, 0, -60], [80, 0, -60], [78, 0, -10], [96, 0, -4], [100, 0, 7], [100, 17, -22], [100, 27, -50], [100, 17, -92]] },
     { id: 'RT_dining', class: 'climb', points: [[-99, 0, 60], [-81, 0, 42], [-81, 8.9, 22.3], [-78.3, 8.9, 19], [-90, 14, 19], [-113, 14, 19]] },
@@ -478,7 +478,7 @@ export const FLOOR_G: MapDef = {
     { id: 'use_gap', kind: 'use', at: [94, 18.6, 44], prompt: 'HOLD E — TIE THE RULER ACROSS', requires: 'string', lockedPrompt: 'THE RUN STOPS HERE — NEED STRING (JUNK DRAWER)', grants: 'bridge', once: true },
     { id: 'use_photo', kind: 'use', at: [52, 20.7, 5], prompt: 'HOLD E — STRAIGHTEN THE PHOTO', once: true },
     { id: 'use_record', kind: 'use', at: [-48, 0, -20], prompt: 'HOLD E — PUT THE RECORD ON' },
-    { id: 'use_microwave', kind: 'use', at: [-121, 16.7, -102], prompt: 'HOLD E — TYPE THE CODE', once: true },
+    { id: 'use_microwave', kind: 'use', at: [-126.5, 16.7, -60], prompt: 'HOLD E — TYPE THE CODE', once: true },
     { id: 'use_flap', kind: 'use', at: [-24, 0, -105], prompt: 'HOLD E — ROLL THE BALL UNDER THE FLAP', requires: 'ball', lockedPrompt: 'THE FLAP IS STUCK — BISCUIT COULD OPEN IT', grants: 'lured', once: true },
     { id: 'launch_toaster', kind: 'launch', at: [-95, 16.7, -101], to: [-63, 33.4, -104], prompt: 'HOLD E — PRESS THE LEVER', flightTime: 1.4 },
     { id: 'warp_vacuum', kind: 'warp', at: [82, 0, 54], to: [0, 52.2, 62], prompt: 'HOLD E — INTO THE HOSE' },
