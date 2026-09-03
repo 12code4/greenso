@@ -9,7 +9,7 @@ const api = (x) => page.evaluate(x);
 const time = () => api('window.__game.time()');
 await api('window.__game.heal()');
 await api('window.__game.activate("E_bed")');
-await api('window.__game.teleport(-2, 3.0, -31.5)');
+await api('window.__game.teleport(-2, 3.05, -33.8)');
 await api('window.__game.setYaw(Math.PI)');
 const t0 = await time();
 let last = -1;

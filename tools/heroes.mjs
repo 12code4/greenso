@@ -54,7 +54,7 @@ check('landed on the birdbath rim', onRim, `pos=${s.pos.map((v) => v.toFixed(1))
 // 4. Tan Flamer: stand in front of him on the flowerbed, get burned, dive to extinguish
 await api('window.__game.heal()');
 await api('window.__game.activate("E_bed")');
-await api('window.__game.teleport(-2, 3.0, -31.5)');
+await api('window.__game.teleport(-2, 3.05, -33.8)'); // ON tier 2 (z ≤ −33); z −31.5 is tier 1, 1.5 u down, hidden behind the tier's lip
 await api('window.__game.setYaw(Math.PI)'); // face north (−z) toward the flamer at z −35.5
 let burned = false;
 const t1 = await time();
