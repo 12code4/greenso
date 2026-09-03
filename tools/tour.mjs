@@ -22,7 +22,7 @@ const FREE = {
     ['hall-wide', 120, 25, 105, -Math.PI * 0.6, 0.3],
     // the kid-logic climbs
     ['climb-plank-kitchen', -95, 14, -70, Math.atan2(-17, -15), 0.2],
-    ['climb-car', 125, 20, 20, Math.atan2(-25, -40), 0.15],
+    ['climb-car', 128, 22, -4, Math.atan2(-28, -30), 0.2], // inside the garage (z 20 was inside the staircase)
     ['climb-dining-chair', -60, 16, 40, Math.atan2(-21, -18), 0.2],
     ['climb-stairs-top', 94, 40, 60, Math.atan2(6, -48), -0.1],
     ['stairwell-up', 117, 6, 85, Math.PI, -0.45],
