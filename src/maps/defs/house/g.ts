@@ -198,6 +198,7 @@ const props: PropInstance[] = [
   P('cup_mug', [-104, 14, 24], 0.3), P('book_paper', [-88, 14, 12], 0.9),
   // ---- Living
   P('fireplace', [57, 0, 5], Math.PI / 2, { size: [28, VAULT, 8] }),
+  P('stack_stairs', [47.75, 0, 14], -Math.PI / 2, { size: [4, 3, 4.5], variant: 4 }), // old magazines: floor → the hearth
   P('photo_frame', [56.4, 24, 5], Math.PI / 2, { variant: 1 }),
   P('tv_cabinet', [12, 0, -26], Math.PI),
   P('tv_crt', [12, 17, -26], Math.PI),
@@ -206,7 +207,7 @@ const props: PropInstance[] = [
   P('couch', [12, 0, 12], 0),
   P('coffee_table', [12, 0, -10]),
   P('bookcase', [-56, 0, 50], -Math.PI / 2, { size: [29.6, 37, 6] }), // west wall, the climb
-  P('rope_knots', [-50, 37, 48], 0, { size: [1, 15.5, 1], variant: 1 }), // from the bookcase top to the rail gap
+  P('rope_knots', [-52, 37, 48], 0, { size: [2.6, 15.5, 1], variant: 1 }), // from the bookcase top to the rail gap (hops)
   P('bookcase', [56, 0, 58], Math.PI / 2, { size: [20, 37, 6], variant: 1 }),
   P('piggy_bank', [56, 17.2, 62], Math.PI / 2),
   P('cardboard_box_open', [-40, 0, -15], -Math.PI / 2),
@@ -329,16 +330,17 @@ export const FLOOR_G: MapDef = {
   routes: [
     { id: 'RT_arrival', class: 'main', points: [[52, 0, -40], [30, 0, -40], [30, 0, -20], [0, 0, 20], [0, 0, 80], [0, 0, 104]] },
     { id: 'RT_kitchen', class: 'main', points: [[30, 0, -80], [8, 0, -80], [-24, 0, -80], [-60, 0, -80], [-92, 0, -90], [-118, 0, -50]] },
-    { id: 'RT_counter', class: 'climb', points: [[-96, 0, -85], [-127, 16.7, -85], [-129.5, 16.7, -98], [-100, 16.7, -105], [-90, 16.7, -104]] },
+    { id: 'RT_counter', class: 'climb', points: [[-96, 0, -85], [-127, 16.7, -85], [-131, 16.7, -98], [-132, 16.7, -109.5], [-110, 16.7, -109.5], [-105, 16.7, -101.5], [-88, 16.7, -101.5]] }, // behind the microwave, in front of the faucet and toaster
     { id: 'RT_pantry', class: 'climb', points: [[-24, 0, -40], [-40, 0, -33.3], [-40, 7.2, -45.5], [-10, 7.2, -45.5]] },
     { id: 'RT_garage', class: 'main', points: [[30, 0, -60], [80, 0, -60], [78, 0, -10], [96, 0, -4], [100, 0, 7], [100, 17, -22], [100, 27, -50], [100, 17, -92]] },
     { id: 'RT_dining', class: 'climb', points: [[-99, 0, 60], [-81, 0, 42], [-81, 8.9, 22.3], [-78.3, 8.9, 19], [-90, 14, 19], [-113, 14, 19]] },
-    { id: 'RT_fireplace', class: 'climb', points: [[30, 0, 5], [50, 0, 24], [50, 3, 21], [50, 13, 21], [52, 20.6, 12]] },
-    { id: 'RT_bookcase', class: 'climb', points: [[-30, 0, 50], [-50, 0, 40], [-55, 5.9, 38], [-55, 22.4, 60], [-55, 37.4, 50], [-50, 52, 47], [-50, 52, 55]] },
+    { id: 'RT_fireplace', class: 'climb', points: [[30, 0, 5], [43, 0, 14], [52, 3, 14], [51, 4.2, 22.6], [60.6, 11.4, 22.6], [49.4, 19.8, 22.6], [51, 21, 22.6], [52.3, 21.2, 12], [52.3, 21.2, 6]] },
+    { id: 'RT_bookcase', class: 'climb', points: [[-30, 0, 50], [-50, 0, 45], [-54.7, 0.7, 52], [-54.7, 6.2, 59.5], [-54.7, 11.7, 40.5], [-54.7, 17.2, 59.5], [-54.7, 22.7, 40.5], [-54.7, 28.2, 59.5], [-54.7, 33.7, 40.5], [-56, 37, 59.5], [-56, 37, 48]] },
+    { id: 'RT_rope', class: 'setpiece', points: [[-56, 37, 48], [-52, 52.2, 51]] },
     { id: 'RT_stairs_lower', class: 'main', points: [[100, 0, 90], [94, 0, 72], [94, 18.4, 46]] },
     { id: 'RT_stairs_upper', class: 'setpiece', points: [[94, 26.1, 35], [94, 46, 10.8]] },
     { id: 'RT_hall', class: 'main', points: [[-130, 0, 90], [-60, 0, 90], [0, 0, 90], [76, 0, 74], [130, 0, 90]] },
-    { id: 'RT_bath', class: 'flank', points: [[40, 0, 40], [66, 0, 40], [76, 0, 22]] },
+    { id: 'RT_bath', class: 'flank', points: [[40, 0, 40], [62, 0, 40], [63, 0, 34], [76, 0, 22]] },
   ],
   // Concealment volumes indoors: no blades, just the perception rule (the cardboard box, the big plants)
   grass: [

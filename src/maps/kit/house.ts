@@ -490,22 +490,35 @@ reg({
 
 reg({
   id: 'rope_knots',
-  // A knotted jump rope hung from above: knots every 1.1 u are ledges (hop knot to knot). size = [_, h, _].
-  dims: [1.2, 15, 1.2],
+  // A knotted jump rope hung from above: knots every 1.1 u are ledges (hop knot to knot). The knots kink the
+  // rope left and right (±0.75 in x) so no knot hangs over your head — you hop up and across. size = [_, h, _].
+  // A "hard" climb by design: jumps, not steps. Routes that use it are setpieces for the walk gate.
+  dims: [2.6, 15, 1.2],
   build(v, size) {
-    const [, h] = sz(size, [1.2, 15, 1.2]);
+    const [, h] = sz(size, [2.6, 15, 1.2]);
     const g = new THREE.Group();
     const rope = mat('FABRIC_SOFT', pickColor(v, [0xd94a6a, 0x4a7ad9, 0xe8d24a]));
-    g.add(cylMesh(0.12, h, rope, h / 2, 6));
     const colliders: LocalBox[] = [];
-    for (let y = 1.1; y < h; y += 1.1) {
+    let k = 0;
+    let prev = new THREE.Vector3(0, 0, 0);
+    for (let y = 1.1; y < h; y += 1.1, k++) {
+      const x = (k % 2 ? -0.75 : 0.75);
+      const at = new THREE.Vector3(x, y, 0);
+      const seg = cylMesh(0.12, prev.distanceTo(at), rope, 0, 6);
+      seg.position.copy(prev).lerp(at, 0.5);
+      seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), at.clone().sub(prev).normalize());
+      g.add(seg);
+      prev = at;
       const knot = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 6), rope);
       knot.scale.set(1.3, 0.7, 1.3);
-      knot.position.y = y;
+      knot.position.set(x, y, 0);
       knot.castShadow = true;
       g.add(knot);
-      colliders.push(solid(1.1, 0.3, 1.1, y));
+      colliders.push(solid(1.1, 0.3, 1.1, y, x));
     }
+    const tail = cylMesh(0.12, h - prev.y, rope, 0, 6);
+    tail.position.set(prev.x / 2, (prev.y + h) / 2, 0);
+    g.add(tail);
     for (const x of [-0.5, 0.5]) {
       const handle = cylMesh(0.3, 2.2, mat('PLASTIC_TOY', 0xf2e6c8), 1.1, 8);
       handle.position.set(x, 1.1, 0);
@@ -517,8 +530,10 @@ reg({
 
 reg({
   id: 'bookcase',
-  // 160 × 200 × 32 cm. Shelves every 5.5 u; on every shelf the kid stacked books into a staircase
-  // toward +x (hop 1.1 → 2.2 → 3.3 → 4.4 → the next shelf). size = [w, h, d].
+  // 160 × 200 × 32 cm. Shelves every 5.5 u; on every shelf the kid stacked books into a staircase (hops of
+  // 1.1) toward one end, and the shelf above stops 4 u short of the upright there — you hop up through the
+  // gap onto it, then the next staircase runs back the other way. Standing books line the back of every
+  // shelf; the front lane is yours. A top board closes the case at h. size = [w, h, d].
   dims: [29.6, 37, 6],
   walkableTop: true,
   cover: 'BW',
@@ -538,42 +553,59 @@ reg({
     g.add(back);
     colliders.push(solid(w, h, 0.4, h / 2, 0, d / 2 - 0.2));
     const gap = 5.5;
-    let shelfIndex = 0;
-    for (let y = 0.4; y <= h - 0.3; y += gap) {
-      const board = boxMesh(w - 2, 0.6, d, wood, y);
-      g.add(board);
-      colliders.push(solid(w - 2, 0.6, d, y));
-      if (y + gap > h) break; // top board
-      const dir = shelfIndex % 2 === 0 ? 1 : -1; // stairs zig-zag so you never walk off the end
-      // Four stacks rising toward `dir`
-      for (let s = 0; s < 4; s++) {
+    const boards: number[] = [];
+    for (let y = 0.4; y <= h - 0.3 - gap + 0.01; y += gap) boards.push(y);
+    boards.push(h - 0.3); // top board
+    const hole = 4;
+    for (let k = 0; k < boards.length; k++) {
+      const y = boards[k];
+      const dirBelow = (k - 1) % 2 === 0 ? 1 : -1; // where the stacks under this board rise to
+      if (k === 0) {
+        const board = boxMesh(w - 2, 0.6, d, wood, y);
+        g.add(board);
+        colliders.push(solid(w - 2, 0.6, d, y));
+      } else {
+        // The board stops `hole` short of the upright at the end the stacks below rise toward
+        const bw = w - 2 - hole;
+        const bx = -dirBelow * hole / 2;
+        const board = boxMesh(bw, 0.6, d, wood, y);
+        board.position.x = bx;
+        g.add(board);
+        colliders.push(solid(bw, 0.6, d, y, bx));
+      }
+      if (k === boards.length - 1) break;
+      const dir = k % 2 === 0 ? 1 : -1;
+      const top = y + 0.3;
+      const nextTop = boards[k + 1] + 0.3;
+      const hops = Math.max(1, Math.round((nextTop - top) / 1.1) - 1);
+      // Stacks rising toward `dir`, the tallest under the hole in the board above; front lane, 3.4 deep
+      for (let s = 0; s < hops; s++) {
         const sh = 1.1 * (s + 1);
-        const x = dir * (-w / 2 + 4 + s * 3.4);
-        let yy = y + 0.3;
-        let k = 0;
-        while (yy < y + 0.3 + sh - 0.01) {
-          const bh = Math.min(0.74, y + 0.3 + sh - yy);
-          const book = boxMesh(3.0, bh, d - 1.2, mat('PAPERBOARD', pickColor(v + shelfIndex * 7 + s * 3 + k, BOOK_COLORS)), yy + bh / 2);
-          book.position.set(x + (Math.random() - 0.5) * 0.3, yy + bh / 2, 0);
+        const x = dir * (w / 2 - 2.6 - 3.4 * (hops - 1 - s));
+        let yy = top;
+        let n = 0;
+        while (yy < top + sh - 0.01) {
+          const bh = Math.min(0.74, top + sh - yy);
+          const book = boxMesh(3.0, bh, 3.2, mat('PAPERBOARD', pickColor(v + k * 7 + s * 3 + n, BOOK_COLORS)), yy + bh / 2);
+          book.position.set(x + (Math.random() - 0.5) * 0.3, yy + bh / 2, -1.3);
           g.add(book);
           yy += bh;
-          k++;
+          n++;
         }
-        colliders.push(solid(3.2, sh, d - 1, y + 0.3 + sh / 2, x));
+        colliders.push(solid(3.2, sh, 3.4, top + sh / 2, x, -1.3));
       }
-      // Standing books fill the rest of the shelf
-      const startX = dir * (-w / 2 + 4 + 4 * 3.4 + 1);
-      const endX = dir * (w / 2 - 1.5);
+      // Standing books along the back of the shelf (2.1 deep), clear of the hole above
+      const startX = -dir * (w / 2 - 1.5);
+      const endX = dir * (w / 2 - 1 - hole - 0.5);
       const step = 0.9 * dir;
       for (let x = startX; dir > 0 ? x < endX : x > endX; x += step) {
         const bh = 3.6 + Math.random() * 1.3;
-        const book = boxMesh(0.7, bh, d - 1.5, mat('PAPERBOARD', pickColor(Math.floor(x * 5) + shelfIndex, BOOK_COLORS)), y + 0.3 + bh / 2);
-        book.position.set(x, y + 0.3 + bh / 2, 0.2);
+        const book = boxMesh(0.7, bh, d - 3.9, mat('PAPERBOARD', pickColor(Math.floor(x * 5) + k, BOOK_COLORS)), top + bh / 2);
+        book.position.set(x, top + bh / 2, 1.65);
         book.rotation.z = Math.random() < 0.1 ? 0.25 * dir : 0;
         g.add(book);
       }
-      colliders.push(solid(Math.abs(endX - startX), 4.2, d - 1.5, y + 0.3 + 2.1, (startX + endX) / 2, 0.2));
-      shelfIndex++;
+      colliders.push(solid(Math.abs(endX - startX), 4.2, d - 3.9, top + 2.1, (startX + endX) / 2, 1.65));
     }
     return { mesh: g, colliders };
   },
@@ -613,18 +645,22 @@ reg({
     colliders.push(solid(w + 4, 1.2, d + 3, 20.6));
     g.add(boxMesh(w, h - 21.2, d, brick, 21.2 + (h - 21.2) / 2));
     colliders.push(solid(w, h - 21.2, d, 21.2 + (h - 21.2) / 2));
-    // Stone ledges up the left cheek (1.2 risers, 1.6 treads): the route to the mantel
+    // Stone ledges out of the left cheek's outer face (1.2 risers, 1.6 treads), zig-zagging front → back → front
+    // so the climb stays on the cheek; the top ledge is one auto-step under the mantel. 5.2 deep, so you stand
+    // clear of the mantel's underside. A "hard" climb: jumps, not steps.
+    const zs: number[] = [];
+    for (let k = 0; k < 7; k++) zs.push(-6 + 1.6 * k);
+    for (let k = 0; k < 7; k++) zs.push(2.0 - 1.6 * k);
+    zs.push(-6);
     let y = 3;
-    let z = -d / 2 - 3;
-    for (let i = 0; y < 20; i++) {
-      const ledge = boxMesh(3.2, 1.2, 1.8, stone, y + 0.6);
-      ledge.position.set(-w / 2 - 1.5, y + 0.6, z);
-      ledge.rotation.y = (Math.random() - 0.5) * 0.1;
+    for (const z of zs) {
+      if (y >= 20) break;
+      const ledge = boxMesh(5.2, 1.2, 1.8, stone, y + 0.6);
+      ledge.position.set(-w / 2 - 2.6, y + 0.6, z);
+      ledge.rotation.y = (Math.random() - 0.5) * 0.06;
       g.add(ledge);
-      colliders.push(solid(3.2, y + 1.2, 1.8, (y + 1.2) / 2, -w / 2 - 1.5, z));
+      colliders.push(solid(5.2, 1.2, 1.8, y + 0.6, -w / 2 - 2.6, z)); // a slab, not a column: the return pass hangs over the first
       y += 1.2;
-      z += i % 2 ? 1.5 : 1.7;
-      if (z > d / 2) z = -d / 2 - 3;
     }
     // Andirons and a log
     const log = cylMesh(1.2, w - 18, mat('WOOD_WARM', 0x5a3a22), 4.2, 8);
