@@ -72,10 +72,11 @@ await api('window.__game.key("ShiftLeft", true)'); await api('window.__game.key(
 await gameWait(0.3);
 await api('window.__game.key("KeyC", true)');
 let toppledMax = 0, dove = false;
+const dives0 = (await state()).dives;
 const t2 = await time();
 while ((await time()) - t2 < 1.6) {
   s = await state();
-  if (s.diving) dove = true;
+  if (s.diving || s.dives > dives0) dove = true; // the counter latches: a dive can start and end inside one turbo frame
   toppledMax = Math.max(toppledMax, s.toppled);
   if ((await time()) - t2 > 0.15) await api('window.__game.key("KeyC", false)');
   await page.waitForTimeout(50);

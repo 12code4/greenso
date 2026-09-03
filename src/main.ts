@@ -538,6 +538,7 @@ if (TEST_MODE) {
       toppled: enemies.list.filter((e) => e.alive && e.state === 'toppled').length,
       crouched: player.crouched,
       diving: player.diving,
+      dives: player.dives,
       squad: squad.active,
       burning: player.burning,
       batteries: interact.sabotaged,

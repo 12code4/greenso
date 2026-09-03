@@ -35,6 +35,8 @@ export class Player {
   crouched = false;
   sprinting = false;
   diving = false;
+  /** Dives started (a latched counter: a 0.38 s dive can begin and end inside one turbo frame). */
+  dives = 0;
   facing = 0;
   root = new THREE.Group();
   push = new THREE.Vector3();
@@ -185,6 +187,7 @@ export class Player {
       if (this.diveTimer <= 0 && this.grounded) this.diving = false;
     } else if (wantDive) {
       this.diving = true;
+      this.dives++;
       this.diveTimer = DIVE_TIME;
       this.vel.x = wx * DIVE_SPEED;
       this.vel.z = wz * DIVE_SPEED;
