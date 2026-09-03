@@ -648,10 +648,11 @@ reg({
     // Stone ledges out of the left cheek's outer face (1.2 risers, 1.6 treads), zig-zagging front → back → front
     // so the climb stays on the cheek; the top ledge is one auto-step under the mantel. 5.2 deep, so you stand
     // clear of the mantel's underside. A "hard" climb: jumps, not steps.
+    // 6 + 6 + 3 ledges over local z −6..2 (the last 1.6 u of the breast sits inside the wall behind it)
     const zs: number[] = [];
-    for (let k = 0; k < 7; k++) zs.push(-6 + 1.6 * k);
-    for (let k = 0; k < 7; k++) zs.push(2.0 - 1.6 * k);
-    zs.push(-6);
+    for (let k = 0; k < 6; k++) zs.push(-6 + 1.6 * k);
+    for (let k = 0; k < 6; k++) zs.push(0.4 - 1.6 * k);
+    for (let k = 0; k < 3; k++) zs.push(-6 + 1.6 * k);
     let y = 3;
     for (const z of zs) {
       if (y >= 20) break;
