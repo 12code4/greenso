@@ -11,6 +11,8 @@ export interface TallyData {
   powsFreed: number;
   accuracy: number;
   deaths: number;
+  batteries?: number;
+  batteriesTotal?: number;
 }
 
 export class Hud {
@@ -22,6 +24,9 @@ export class Hud {
   private marblesEl: HTMLDivElement;
   private statsEl: HTMLDivElement;
   private objectiveEl: HTMLDivElement;
+  private compassEl: HTMLDivElement;
+  private compassPin: HTMLDivElement;
+  private compassDist: HTMLDivElement;
   private radioEl: HTMLDivElement;
   private radioName: HTMLDivElement;
   private radioText: HTMLDivElement;
@@ -41,6 +46,7 @@ export class Hud {
   private radioTimer = 0;
   private radioFull = '';
   private radioShown = 0;
+  private radioQueue: { speaker: string; text: string; seconds: number; tone: 'green' | 'tan' }[] = [];
   private toastTimer = 0;
   private critical = false;
 
@@ -68,6 +74,11 @@ export class Hud {
     this.statsEl = el('div', 'stats', topLeft);
 
     this.objectiveEl = el('div', 'objective', root);
+    this.compassEl = el('div', 'compass', root);
+    const strip = el('div', 'strip', this.compassEl);
+    this.compassPin = el('div', 'pin', strip);
+    this.compassDist = el('div', 'dist', this.compassEl);
+    this.compassEl.style.display = 'none';
 
     this.radioEl = el('div', 'radio', root);
     this.radioName = el('div', 'radio-name', this.radioEl);
@@ -96,6 +107,7 @@ export class Hud {
       'C crouch · C while sprinting: dive<br>' +
       'G grenade (hold to cook) · E interact<br>' +
       '1 rifle · 2 cap · 3 sniper · 4 flamethrower · 5 bazooka · Q cycle<br>' +
+      '[ ] look sensitivity · I invert Y · M mute<br>' +
       'F8 free-cam · P log position · F9 regions<br>' +
       'H toggle this · Esc release mouse';
     this.help.style.display = 'none';
@@ -117,13 +129,16 @@ export class Hud {
     this.overlay.style.display = visible ? 'flex' : 'none';
   }
 
-  setBriefing(title: string, subtitle: string, lines: string[]): void {
+  setBriefing(title: string, subtitle: string, lines: string[], missions: { id: string; title: string; sub: string; current: boolean }[] = []): void {
     this.overlayBody.innerHTML =
       `<div class="title">${title}</div>` +
       (subtitle ? `<div class="sub">${subtitle}</div>` : '') +
       (lines.length ? `<div class="brief">${lines.map((l) => `<div>${l}</div>`).join('')}</div>` : '') +
       '<div class="deploy">CLICK TO DEPLOY</div>' +
-      '<div class="controls">WASD + mouse · Shift sprint · Space jump · RMB aim · LMB fire · G grenade · E interact</div>';
+      '<div class="controls">WASD + mouse · Shift sprint · Space jump · RMB aim · LMB fire · G grenade · E interact · H all controls</div>' +
+      (missions.length > 1
+        ? `<div class="missions">${missions.map((m) => `<a class="mission${m.current ? ' current' : ''}" href="?map=${m.id}"><b>${m.title}</b><span>${m.sub}</span></a>`).join('')}</div>`
+        : '');
   }
 
   showTally(d: TallyData): void {
@@ -137,6 +152,7 @@ export class Hud {
       `<tr><td>POWs freed</td><td>${d.powsFreed}</td></tr>` +
       `<tr><td>Accuracy</td><td>${Math.round(d.accuracy * 100)}%</td></tr>` +
       `<tr><td>Replacements requisitioned</td><td>${d.deaths}</td></tr>` +
+      (d.batteriesTotal ? `<tr><td>Batteries sabotaged</td><td>${d.batteries ?? 0} / ${d.batteriesTotal}</td></tr>` : '') +
       '</table>' +
       '<div class="again">R — back to the toy bin</div>';
     this.tally.style.display = 'flex';
@@ -190,16 +206,37 @@ export class Hud {
     this.statsEl.textContent = text;
   }
 
+  /** Compass strip under the objective: `rel` is the waypoint bearing relative to the camera (+ = left). */
+  setCompass(rel: number | null, dist: number): void {
+    if (rel === null) { this.compassEl.style.display = 'none'; return; }
+    this.compassEl.style.display = 'block';
+    const x = Math.max(-1, Math.min(1, -rel / (Math.PI / 2)));
+    this.compassPin.style.left = `${(x * 0.5 + 0.5) * 100}%`;
+    const behind = Math.abs(rel) > Math.PI / 2;
+    this.compassPin.classList.toggle('behind', behind);
+    const inches = Math.round(dist * 2.13);
+    this.compassDist.textContent = behind ? `BEHIND YOU · ${inches} IN` : `${inches} IN`;
+  }
+
   setObjective(text: string): void {
     this.objectiveEl.textContent = text ? `▸ ${text}` : '';
   }
 
-  radio(speaker: string, text: string, seconds = 6): void {
+  radio(speaker: string, text: string, seconds = 6, tone: 'green' | 'tan' = 'green'): void {
+    if (this.radioTimer > 0) {
+      if (this.radioQueue.length < 3) this.radioQueue.push({ speaker, text, seconds, tone });
+      return;
+    }
     this.radioName.textContent = speaker;
     this.radioFull = text;
     this.radioShown = 0;
     this.radioTimer = seconds + text.length * 0.02;
+    this.radioEl.classList.toggle('tan', tone === 'tan');
     this.radioEl.style.display = 'block';
+  }
+
+  setBurning(on: boolean): void {
+    this.vignette.classList.toggle('burning', on);
   }
 
   setPrompt(text: string | null, progress = 0): void {
@@ -229,7 +266,11 @@ export class Hud {
       this.radioTimer -= dt;
       this.radioShown = Math.min(this.radioFull.length, this.radioShown + dt * 55);
       this.radioText.textContent = this.radioFull.slice(0, Math.floor(this.radioShown));
-      if (this.radioTimer <= 0) this.radioEl.style.display = 'none';
+      if (this.radioTimer <= 0) {
+        this.radioEl.style.display = 'none';
+        const next = this.radioQueue.shift();
+        if (next) this.radio(next.speaker, next.text, next.seconds, next.tone);
+      }
     }
     if (this.toastTimer > 0) {
       this.toastTimer -= dt;
@@ -281,6 +322,8 @@ const CSS = `
 .vignette { position: absolute; inset: 0; box-shadow: inset 0 0 120px rgba(220,60,30,0); transition: box-shadow 0.25s; }
 .vignette.flash { animation: dmg 0.45s; }
 .vignette.critical { animation: crit 1.6s infinite; }
+.vignette.burning { animation: burn 0.5s infinite; }
+@keyframes burn { 0%,100% { box-shadow: inset 0 0 140px rgba(255,120,20,0.45); } 50% { box-shadow: inset 0 0 200px rgba(255,170,40,0.7); } }
 @keyframes dmg { 0% { box-shadow: inset 0 0 160px rgba(230,70,30,0.75); } 100% { box-shadow: inset 0 0 120px rgba(220,60,30,0); } }
 @keyframes crit { 0%,100% { box-shadow: inset 0 0 110px rgba(230,80,30,0.25); } 50% { box-shadow: inset 0 0 150px rgba(230,80,30,0.55); } }
 .crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -306,7 +349,15 @@ const CSS = `
 .melt .fill { height: 100%; width: 100%; background: #8bc46a; transition: width 0.15s, background 0.3s; }
 .marbles, .stats { margin-top: 5px; opacity: 0.85; font-size: 12px; }
 .objective { position: absolute; top: 14px; left: 50%; transform: translateX(-50%) rotate(0.6deg); font-family: var(--stencil); text-transform: uppercase; font-size: 14px; letter-spacing: 3px; text-shadow: none; background: var(--olive); color: var(--cream); padding: 7px 18px 6px; border: 2px dashed rgba(239,228,198,0.5); outline: 3px solid var(--olive); border-radius: 2px; box-shadow: 0 3px 0 var(--olive-dk), 0 6px 14px rgba(0,0,0,0.35); }
+.compass { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); width: 280px; text-align: center; }
+.compass .strip { position: relative; height: 12px; background: rgba(20,16,10,0.55) repeating-linear-gradient(90deg, transparent 0 34px, rgba(239,228,198,0.35) 34px 35px); border: 1px solid rgba(239,228,198,0.35); border-radius: 2px; overflow: visible; }
+.compass .strip::before { content: ''; position: absolute; left: 50%; top: -2px; width: 1px; height: 16px; background: rgba(239,228,198,0.7); }
+.compass .pin { position: absolute; top: -5px; width: 12px; height: 12px; margin-left: -6px; background: #a8d47a; border: 2px solid #3a5a28; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 0 4px rgba(0,0,0,0.6); transition: left 0.08s linear; }
+.compass .pin.behind { background: #e0b04a; }
+.compass .dist { font-family: var(--stencil); text-transform: uppercase; letter-spacing: 2px; font-size: 12px; margin-top: 4px; opacity: 0.9; }
 .radio { position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%); width: min(640px, 80vw); background: rgba(20,16,10,0.78); border-left: 5px solid var(--olive); outline: 1px solid rgba(239,228,198,0.25); padding: 10px 14px; border-radius: 2px; font-size: 14px; line-height: 1.45; }
+.radio.tan { border-left-color: #c9a86a; }
+.radio.tan .radio-name { color: #e8cf98; }
 .radio-name { font-family: var(--stencil); text-transform: uppercase; font-size: 12px; letter-spacing: 3px; color: #b8d48a; margin-bottom: 3px; text-shadow: none; }
 .prompt { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); text-align: center; font-family: var(--stencil); text-transform: uppercase; font-size: 15px; letter-spacing: 3px; }
 .prompt-bar { width: 180px; height: 6px; margin: 6px auto 0; background: rgba(0,0,0,0.5); border: 1px solid rgba(242,234,217,0.5); border-radius: 3px; overflow: hidden; }
@@ -324,6 +375,13 @@ const CSS = `
 .overlay .brief { margin-top: 26px; font-size: 14px; line-height: 1.8; text-align: left; background: rgba(20,16,10,0.55); padding: 14px 20px; border-left: 3px solid #a8d47a; border-radius: 4px; }
 .overlay .deploy { margin-top: 34px; font-size: 18px; letter-spacing: 4px; animation: pulse 1.6s infinite; }
 .overlay .controls { margin-top: 16px; font-size: 12px; opacity: 0.7; }
+.overlay .missions { margin-top: 26px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
+.overlay .mission { display: flex; flex-direction: column; gap: 4px; min-width: 180px; padding: 10px 16px 9px; text-decoration: none; color: var(--cream); background: var(--olive); border: 2px dashed rgba(239,228,198,0.5); outline: 3px solid var(--olive); border-radius: 2px; box-shadow: 0 3px 0 var(--olive-dk); transform: rotate(-0.6deg); transition: transform 0.1s; }
+.overlay .mission:nth-child(even) { transform: rotate(0.8deg); }
+.overlay .mission:hover { transform: rotate(0deg) scale(1.04); }
+.overlay .mission b { font-family: var(--stencil); text-transform: uppercase; letter-spacing: 3px; font-size: 15px; text-shadow: none; }
+.overlay .mission span { font-size: 11px; opacity: 0.85; }
+.overlay .mission.current { outline-color: #a8d47a; border-color: rgba(168,212,122,0.8); }
 @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 .tally { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(24,19,11,0.7); backdrop-filter: blur(3px); }
 .tally .title { font-family: var(--stencil); font-size: 44px; letter-spacing: 8px; color: #a8d47a; text-shadow: 0 3px 0 #3a5a28; }

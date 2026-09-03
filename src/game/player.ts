@@ -46,6 +46,10 @@ export class Player {
   alive = true;
   deaths = 0;
   invuln = 0;
+  /** Seconds of candle-fire left on you (Tan Flamer). Diving rolls it out. */
+  burning = 0;
+  /** Bottle-rocket flight: plain gravity, no jump-cut, no air steering, until you land. */
+  launchT = 0;
   private deathTimer = 0;
   onDamaged: ((amount: number, from: THREE.Vector3 | null) => void) | null = null;
   onDeath: (() => void) | null = null;
@@ -132,6 +136,8 @@ export class Player {
     this.hp = this.maxHp;
     this.alive = true;
     this.invuln = 1.5;
+    this.burning = 0;
+    this.launchT = 0;
     this.crouched = false;
     this.diving = false;
     if (this.onRespawn) this.onRespawn();
@@ -160,7 +166,10 @@ export class Player {
 
     const wantCrouch = input.held('KeyC') || input.held('ControlLeft') || input.held('ControlRight');
     const wantSprint = input.held('ShiftLeft') || input.held('ShiftRight');
-    this.crouched = wantCrouch && this.grounded && !this.diving;
+    // Dive wins over crouch on the frame C lands while sprinting — otherwise the crouch
+    // cancels the sprint first and the dive can never start (playtest: "C while sprinting" did nothing).
+    const wantDive = wantSprint && hasInput && !aiming && this.grounded && !this.diving && input.pressed('KeyC');
+    this.crouched = wantCrouch && this.grounded && !this.diving && !wantDive;
     this.sprinting = wantSprint && hasInput && !this.crouched && !aiming && !this.diving;
 
     // Camera-relative wish direction (forward = (sin yaw, cos yaw))
@@ -174,7 +183,7 @@ export class Player {
     if (this.diving) {
       this.diveTimer -= dt;
       if (this.diveTimer <= 0 && this.grounded) this.diving = false;
-    } else if (this.sprinting && input.pressed('KeyC') && this.grounded) {
+    } else if (wantDive) {
       this.diving = true;
       this.diveTimer = DIVE_TIME;
       this.vel.x = wx * DIVE_SPEED;
@@ -183,7 +192,10 @@ export class Player {
       this.grounded = false;
     }
 
-    if (!this.diving) {
+    if (this.launchT > 0) {
+      this.launchT -= dt;
+      if (this.grounded && this.vel.y <= 0) this.launchT = 0;
+    } else if (!this.diving) {
       const speed = this.crouched ? CROUCH_SPEED : aiming ? AIM_SPEED : this.sprinting ? SPRINT_SPEED : WALK_SPEED;
       const rate = this.grounded ? GROUND_ACCEL_RATE : AIR_ACCEL_RATE;
       const k = 1 - Math.exp(-rate * dt);
@@ -208,7 +220,7 @@ export class Player {
     }
     this.jumpHeld = input.held('Space');
 
-    const g = this.vel.y > 0 ? (this.jumpHeld ? GRAVITY : JUMP_CUT_GRAVITY) : FALL_GRAVITY;
+    const g = this.launchT > 0 ? GRAVITY : this.vel.y > 0 ? (this.jumpHeld ? GRAVITY : JUMP_CUT_GRAVITY) : FALL_GRAVITY;
     this.vel.y -= g * dt;
     if (this.vel.y < -30) this.vel.y = -30;
     this.fallSpeed = -this.vel.y;

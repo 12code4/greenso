@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { pick } from '../core/math';
 
 export const TAN_BARKS = {
+  suspicious: ['Huh?', 'Hear that?', 'Who\'s there?', 'Sarge?', 'Hm.'],
   alert: ['Green!', 'Contact!', 'There he is!', 'Get him!', 'Greenie!', 'Sound the alarm!'],
   hit: ['Ow!', 'My paint!', 'Medic!', 'That\'s my good side!', 'Hey!'],
   death: ['Aaaah!', 'Mommy!', 'Tell Taupe—', 'Not like this!', 'I regret nothing!'],
@@ -33,6 +34,24 @@ interface Bark {
 
 const COLORS = { tan: '#f2dcb0', green: '#b8e89a', fern: '#d9f0c8', olive: '#e6e6d8' } as const;
 export type BarkColor = keyof typeof COLORS;
+
+/** Pvt. Sprout — eager, loud, draws aggro badly. */
+export const SPROUT_BARKS = {
+  join: ['Pvt. Sprout, reporting!', 'Where do you want me, Sarge?'],
+  combat: ['Over here! Over HERE!', 'I got this one!', 'Covering!', 'Was that me?', 'Sarge, they\'re shooting!'],
+  kill: ['Got one!', 'Did you see that?!', 'That was me. That was me.'],
+  idle: ['Nice yard.', 'Are we there yet?', 'I like the tall grass.', 'My mold has a bubble in it.'],
+  down: ['Sarge? SARGE?', 'Medic! I mean — glue!'],
+};
+
+/** Gen. Taupe on the ham radio: hammy villain vs Moss's deadpan. */
+export const TAUPE_LINES = {
+  contact: ['Ah, the Green. Right on schedule. Boys — make him a puddle.', 'That\'s MY yard, Sergeant.', 'You\'re two inches tall and out of your depth.', 'Tan Command to all units: the little green one. Squash him.'],
+  death: ['Another one for the bin! Ha!', 'Melted, shattered — I lose track.', 'Do they make you in bulk?', 'Send the next one. I have all afternoon.'],
+  objective: ['Enjoy it. It\'s the last thing you take from me.', 'One clearing. I have the whole house.', 'You fight like a Christmas ornament.'],
+  sabotage: ['My BATTERIES! Do you know what those cost?!', 'Leave the batteries alone, you plastic vandal!'],
+  leaf: ['A LEAF? You\'re escaping on a LEAF?', 'Gliders! Sink that leaf!'],
+};
 
 export class Barks {
   private scene: THREE.Scene;

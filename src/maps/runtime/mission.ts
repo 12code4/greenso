@@ -11,6 +11,7 @@ export interface MissionHooks {
   radio(text: string): void;
   objective(text: string): void;
   onObjectiveStart(id: string): void;
+  onObjectiveDone(id: string): void;
   onComplete(): void;
   sfx(name: string): void;
 }
@@ -86,6 +87,7 @@ export class MissionFSM {
     }
     if (done) {
       this.hooks.sfx('objective');
+      this.hooks.onObjectiveDone(o.id);
       if (o.radioDone) this.hooks.radio(o.radioDone);
       // Brief beat before the next objective lands
       this.startDelay = o.radioDone ? 2.2 : 0.3;

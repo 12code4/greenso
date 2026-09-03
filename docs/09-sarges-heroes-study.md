@@ -73,3 +73,35 @@ Deferred to Update 3: the perception overhaul (still the biggest fairness issue)
 - **Stencil HUD**: objective, weapon, toasts and the briefing subtitle are stenciled ammo-crate labels (olive drab, dashed inner border, cream Impact-stack lettering, a degree off level); the melt meter is notched; the radio card carries the same olive stripe.
 
 Deferred: a pose-snap **weapon-switch flourish** and an aim-down-sights hand pose; brand-art label textures on more props (only the cereal/juice boxes have wordmarks so far).
+
+### Update 3 — FAIR PLAY (shipped 2026-09-02)
+
+*You can tell where to go, and the Tans give you a fighting chance.* Answers 08 §0.1 and §0.2 directly.
+
+- **The awareness ladder** (`enemies.ts` perception): idle → *glimpse* → **suspicious** ("Huh?", turns toward you, searches, does not shoot) → kept in view → **combat** ("Green!"). Glimpse odds now depend on a **view cone** (±70° idle, ±109° searching, anything inside 3.5 u), **distance** (linear falloff to the sight range), **stance** (sprinting ×1.7, walking ×1, standing still ×0.6, crouched ×0.45) and grass concealment. About three glimpses lock on. A comrade's shout carries 14 u, takes 1.2 s to register and makes Tans *look*, not shoot. Gunfire still turns heads within 22 u, to searching. Ambush pockets still rise together.
+- **First-shot grace**: every lock-on holds fire for at least 0.7 s after the shout. Losing you for 6 s drops a Tan back to searching.
+- **Olive's radio pin**: a green marker at the active objective's waypoint, drawn through geometry, with a pulsing ground ring, hidden when you're on it. Waypoints derive from the objective (region centre, encounter centroid, POW), or an explicit `at` (the leaf at the tear; once boarded it jumps to the Drain).
+- **Compass strip** under the objective label: a pin on a 180° strip with the distance in *inches* (1 u = 2.13 in), amber and "BEHIND YOU" when the target is behind.
+- **Visible trail**: Fern's markers are now a glowing yellow band on the ground *and* one hung on a 1.7 u twig, readable above over-head grass. **Chalk arrows** at both brick steps, at the trail's turn into the Gnome, and at the hose tear.
+- **Checkpoint per objective**: completing any objective sets the respawn point where you stand ("CHECKPOINT"). Dying in the convoy raid no longer replays the climb.
+- **Dive-tackle**: sprint + C into a Tan topples molded ones and shoves articulated ones (30 dmg, 1.2 s of no fire). The `divedInto` flag finally has a consumer.
+- **Minimal options**: `[` `]` look sensitivity, `I` invert Y, `M` mute, persisted in `localStorage`. Listed under H.
+- Gate: new `fairplay.mjs` (pin + checkpoint, crouched-behind-a-pocket stays unseen 3 s, sprint-in shows the suspicious step and a ≥0.5 s grace, dive-tackle topples).
+
+Deferred: the awareness icon over heads (the bark carries it for now), gamepad, difficulty philosophy (PM decision).
+
+### Update 4 — HEROES & CONTENT (shipped 2026-09-02)
+
+*Characters, a second route, a second wave, and something to do on the way.*
+
+- **Pvt. Sprout** (`squad.ts`) joins after the Gnome clearing ("Pvt. Sprout, reporting!"). Follows at your shoulder camera-relative, probes ahead so he doesn't walk through props, catches up off-screen if he loses you or a tier, shoots the Tan you're fighting (7 dmg every ~0.9 s, tracer + flash), and talks far too much (`SPROUT_BARKS`: combat, kills, idle chatter, panic when you die). Invincible by rule (docs/02: escort tedium is banned).
+- **Gen. Taupe on the ham radio** (`TAUPE_LINES`): hammy taunts on encounter activation (always when an officer is present), on your death (instead of Olive, 45%), on objectives, on battery sabotage, and when you board the leaf. The radio card is tan-striped for him; lines queue instead of clobbering Olive's.
+- **Tan Flamer** — a new enemy type with the candle-fuel tank on his back. Closes to 3–5 u, then a 1.4 s gout of fire: melt damage while you stand in it and **you keep burning after** (orange vignette, damage in 4-point ticks). **Stop, drop and roll**: a sprint-dive puts it out ("ROLLED IT OUT") and buys 0.8 s of fire immunity, so rolling away works even while he's still spraying. Olive tells you once. Killing him **blows his tank** (blast radius 3.2). One on the flowerbed perch, one in the convoy wave. Flamers never flee.
+- **Convoy reinforcement wave**: 16 s into the raid four more Tans come down the road from the north, torch included — the raid objective clears on the original picket, so the wave chases you to the leaf. The director now runs `schedule` activations.
+- **Secondary objective**: sabotage the three battery crates at the convoy waypoint (hold E). Counted in the HUD stats line and on the medal tally; Taupe hates it.
+- **Bottle-rocket launch** — a second route to Fern. The kid's soda bottle at the flowerbed's foot, matchstick rocket in the neck, aimed at the birdbath. Hold E to light the fuse; a ballistic solve flings you onto the rim in 1.8 s (plain gravity for the flight — no jump-cut, no air steering — so the arc lands where it was aimed). Olive mentions it in the rescue briefing.
+- **Mission select** on the briefing screen: stenciled crate labels for every map in the build.
+- **Dive fixed**: "C while sprinting: dive" was documented since M0 and unreachable — pressing C set the crouch first, which cancelled the sprint the dive checked for. Dive now wins on that frame. Every dive verb in Updates 3 and 4 (tackle, roll-out) depends on it.
+- Gate: new `heroes.mjs` (Sprout joins, crate sabotaged, rocket lands on the rim, flamer burns and a dive extinguishes, wave arrives at 16 s).
+
+Deferred to the next round: a Sprout revive/downed state, the tilting-truck set piece and the Sandbox tutorial map (blueprint 01 is the cheapest next map on this kit), brand-art labels, gamepad.

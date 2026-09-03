@@ -33,7 +33,12 @@ export interface RouteDef {
   points: Vec3[];
 }
 
-export type EnemyType = 'trooper' | 'based' | 'grenadier' | 'sniper' | 'officer';
+export type EnemyType = 'trooper' | 'based' | 'grenadier' | 'sniper' | 'officer' | 'flamer';
+
+/** Hold-E interactables (Update 4): sabotage a battery crate, or light a bottle rocket that flings you to `to`. */
+export type InteractableDef =
+  | { id: string; kind: 'sabotage'; at: Vec3; prompt: string; hold?: number }
+  | { id: string; kind: 'launch'; at: Vec3; to: Vec3; prompt: string; hold?: number; flightTime?: number };
 
 export interface UnitDef {
   type: EnemyType;
@@ -129,6 +134,8 @@ export interface ObjectiveDef {
   radio?: string;
   /** Olive's radio line when it completes. */
   radioDone?: string;
+  /** Explicit waypoint for the radio pin (else derived from the target). */
+  at?: Vec3;
 }
 
 export interface MissionDef {
@@ -190,6 +197,7 @@ export interface MapDef {
   hazards: HazardDef[];
   pickups: PickupDef[];
   pows?: PowDef[];
+  interactables?: InteractableDef[];
   platforms?: PlatformDef[];
   aircraft?: AircraftWave[];
   mission?: MissionDef;

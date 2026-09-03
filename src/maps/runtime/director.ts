@@ -22,6 +22,8 @@ interface Instance {
 export class EncounterDirector {
   private instances: Instance[] = [];
   private spawner: UnitSpawner;
+  private clock = 0;
+  private due: { id: string; at: number }[] = [];
   onActivated: ((id: string) => void) | null = null;
   onCleared: ((id: string) => void) | null = null;
 
@@ -53,6 +55,11 @@ export class EncounterDirector {
       this.spawner.spawn(u.type, at, u.yaw ?? 0, id, nodes, ambush);
     }
     if (this.onActivated) this.onActivated(id);
+    // Scheduled follow-ups (reinforcement waves): `delay` seconds after this one
+    for (const i of this.instances) {
+      const a = i.def.activation;
+      if (a.kind === 'schedule' && a.after === id) this.due.push({ id: i.def.id, at: this.clock + a.delay });
+    }
   }
 
   onRegionEnter(regionId: string): void {
@@ -81,7 +88,11 @@ export class EncounterDirector {
     return true;
   }
 
-  update(): void {
+  update(dt = 0): void {
+    this.clock += dt;
+    for (let k = this.due.length - 1; k >= 0; k--) {
+      if (this.due[k].at <= this.clock) { const id = this.due[k].id; this.due.splice(k, 1); this.activate(id); }
+    }
     for (const i of this.instances) {
       if (i.active && !i.cleared && this.spawner.aliveIn(i.def.id) === 0) {
         i.cleared = true;

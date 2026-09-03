@@ -116,6 +116,13 @@ export const BACKYARD: MapDef = {
 
     // ----- Flowerbed: brick steps up the tiers (RT_bricks), flowers, the birdbath + rake -----
     // Bricks sit flush against the tier faces (a capsule falls into any gap > 0.36)
+    // Chalk arrows (Update 3): at the brick steps, the trail's turn into the Gnome, and the hose tear
+    // The kid's bottle rocket at the flowerbed's foot, aimed (roughly) at the birdbath
+    { kit: 'bottle_rocket', at: [-14, 0, -24.5], yaw: 0.9 },
+    { kit: 'chalk_arrow', at: [-20, 0, -25.6], yaw: 0 },
+    { kit: 'chalk_arrow', at: [-13, T1, -30.6], yaw: 0 },
+    { kit: 'chalk_arrow', at: [-13.2, 0, -5], yaw: Math.PI / 2 },
+    { kit: 'chalk_arrow', at: [13.2, 0, -17], yaw: -Math.PI / 2 },
     { kit: 'brick_garden', at: [-20, 0, -27.1] }, // lawn → tier 1 (1.2 → 1.5)
     { kit: 'brick_garden', at: [-13, T1, -32.1] }, // tier 1 → tier 2 (2.7 → 3.0)
     { kit: 'birdbath', at: [-24, T1, -33] },
@@ -187,42 +194,54 @@ export const BACKYARD: MapDef = {
       id: 'E_steppe', template: 'PICKET_LINE', region: 'R_steppe',
       activation: { kind: 'region-enter', region: 'R_steppe' },
       units: [
-        { type: 'trooper', at: [-6, 0, 12], yaw: 0 },
-        { type: 'trooper', at: [5, 0, 10], yaw: 0 },
+        { type: 'trooper', at: [-6, 0, 12], yaw: Math.PI },
+        { type: 'trooper', at: [5, 0, 10], yaw: Math.PI },
       ],
     },
     {
       id: 'E_gnome', template: 'LANE_AND_FLANK', region: 'R_gnome',
       activation: { kind: 'region-enter', region: 'R_gnome' },
       units: [
-        { type: 'based', at: [-20, 0, -12], nodes: [[-22.5, 0, -12], [-18, 0, -12]] },
-        { type: 'based', at: [-26, 0, -11], nodes: [[-28, 0, -11], [-24.5, 0, -11.5]] },
-        { type: 'based', at: [-16, 0, -13.5], nodes: [[-17.5, 0, -14], [-15, 0, -13]] },
-        { type: 'based', at: [-23, 0, -8], nodes: [[-24.5, 0, -8], [-21.5, 0, -8]] },
-        { type: 'trooper', at: [-28, 0, -3] },
-        { type: 'trooper', at: [-28.5, 0, 1.5] },
-        { type: 'trooper', at: [-17, 0, 2] },
+        { type: 'based', at: [-20, 0, -12], yaw: -Math.PI * 0.75, nodes: [[-22.5, 0, -12], [-18, 0, -12]] },
+        { type: 'based', at: [-26, 0, -11], yaw: -Math.PI * 0.75, nodes: [[-28, 0, -11], [-24.5, 0, -11.5]] },
+        { type: 'based', at: [-16, 0, -13.5], yaw: Math.PI, nodes: [[-17.5, 0, -14], [-15, 0, -13]] },
+        { type: 'based', at: [-23, 0, -8], yaw: -Math.PI * 0.75, nodes: [[-24.5, 0, -8], [-21.5, 0, -8]] },
+        { type: 'trooper', at: [-28, 0, -3], yaw: -Math.PI / 2 },
+        { type: 'trooper', at: [-28.5, 0, 1.5], yaw: -Math.PI / 2 },
+        { type: 'trooper', at: [-17, 0, 2], yaw: -Math.PI / 2 },
       ],
     },
     {
       id: 'E_bed', template: 'HIGH_GROUND_TAX', region: 'R_bed',
       activation: { kind: 'region-enter', region: 'R_bed' },
       units: [
-        { type: 'grenadier', at: [-6, T2, -37.5], nodes: [[-8, T2, -37.5], [-4, T2, -37.5]] },
-        { type: 'grenadier', at: [4, T2, -37.5], nodes: [[2, T2, -37.5], [6, T2, -37.5]] },
+        { type: 'grenadier', at: [-6, T2, -37.5], yaw: Math.PI, nodes: [[-8, T2, -37.5], [-4, T2, -37.5]] },
+        { type: 'grenadier', at: [4, T2, -37.5], yaw: Math.PI, nodes: [[2, T2, -37.5], [6, T2, -37.5]] },
         { type: 'sniper', at: [10, T2, -38.5], yaw: Math.PI },
+        { type: 'flamer', at: [-2, T2, -35.5], yaw: Math.PI },
       ],
     },
     {
       id: 'E_convoy', template: 'PICKET_LINE', region: 'R_convoy',
       activation: { kind: 'objective', objective: 'raid_convoy' },
       units: [
-        { type: 'based', at: [20, 0, -5], nodes: [[18.5, 0, -5], [21.5, 0, -5]] },
-        { type: 'based', at: [26.5, 0, -8.5], nodes: [[25, 0, -8.5], [28, 0, -8.5]] },
-        { type: 'based', at: [23, 0.1, -2.5], nodes: [[22, 0.1, -3], [24, 0.1, -2]] },
-        { type: 'officer', at: [23, 0, -11] },
-        { type: 'trooper', at: [18, 0, -14] },
-        { type: 'trooper', at: [27, 0, -14] },
+        { type: 'based', at: [20, 0, -5], yaw: Math.PI / 2, nodes: [[18.5, 0, -5], [21.5, 0, -5]] },
+        { type: 'based', at: [26.5, 0, -8.5], yaw: Math.PI / 2, nodes: [[25, 0, -8.5], [28, 0, -8.5]] },
+        { type: 'based', at: [23, 0.1, -2.5], yaw: Math.PI, nodes: [[22, 0.1, -3], [24, 0.1, -2]] },
+        { type: 'officer', at: [23, 0, -11], yaw: Math.PI },
+        { type: 'trooper', at: [18, 0, -14], yaw: Math.PI / 2 },
+        { type: 'trooper', at: [27, 0, -14], yaw: Math.PI },
+      ],
+    },
+    {
+      // Reinforcement wave: 16 s into the raid, four more come down the road from the north — one with a candle torch
+      id: 'E_convoy_wave', template: 'PICKET_LINE', region: 'R_convoy',
+      activation: { kind: 'schedule', delay: 16, after: 'E_convoy' },
+      units: [
+        { type: 'trooper', at: [19, 0, -27], yaw: Math.PI },
+        { type: 'trooper', at: [23, 0, -28.5], yaw: Math.PI },
+        { type: 'trooper', at: [27, 0, -27], yaw: Math.PI },
+        { type: 'flamer', at: [23, 0, -25.5], yaw: Math.PI },
       ],
     },
     {
@@ -299,6 +318,15 @@ export const BACKYARD: MapDef = {
 
   pows: [{ id: 'fern', name: 'Cpl. Fern', at: [-24, BIRD_RIM, -34.6], yaw: 0.2, post: [-24, BIRD_RIM, -34.6] }],
 
+  interactables: [
+    // Secondary objective: sabotage the convoy's battery crates
+    { id: 'batt_1', kind: 'sabotage', at: [25.5, 0.28, -10], prompt: 'HOLD E — SABOTAGE BATTERIES' },
+    { id: 'batt_2', kind: 'sabotage', at: [20.5, 0.28, -11], prompt: 'HOLD E — SABOTAGE BATTERIES' },
+    { id: 'batt_3', kind: 'sabotage', at: [24.3, 0.38, -13], prompt: 'HOLD E — SABOTAGE BATTERIES' },
+    // Second route to Fern: light the bottle rocket, ride the stick
+    { id: 'rocket', kind: 'launch', at: [-14, 0, -24.5], to: [-24, BIRD_RIM + 0.3, -32.4], prompt: 'HOLD E — LIGHT THE FUSE', flightTime: 1.8 },
+  ],
+
   platforms: [{ id: 'leaf', kit: 'leaf_raft', path: STREAM, speed: 4.2, startOn: 'escape_leaf', stream: true }],
 
   aircraft: [
@@ -323,12 +351,12 @@ export const BACKYARD: MapDef = {
       { id: 'find_convoy', kind: 'discover', target: 'R_convoy', text: 'Find the Tan supply route',
         radioDone: 'A race track. They\'re running batteries down a race track. Noted. Now — Fern.' },
       { id: 'rescue_fern', kind: 'rescue', target: 'fern', text: 'Rescue Cpl. Fern at the Birdbath',
-        radio: 'Fern\'s glued to the Birdbath rim. Up the flowerbed. Mind the perch — grenadiers.',
+        radio: 'Fern\'s glued to the Birdbath rim. Up the flowerbed. Mind the perch — grenadiers. Or the kid\'s bottle rocket at the bed\'s foot, if you feel lucky.',
         radioDone: 'Fern: "Took you long enough. Take my spare bands. I\'ve got the high ground."' },
       { id: 'raid_convoy', kind: 'clear', target: 'E_convoy', text: 'Raid the convoy waypoint',
         radio: 'Hit the waypoint on the road. Fern\'s covering from the bath. Watch the sky.',
         radioDone: 'Waypoint\'s scrap. More gliders inbound — get to the torn hose. There\'s a stream.' },
-      { id: 'escape_leaf', kind: 'ride', target: 'R_exit', text: 'Ride the leaf down the hose-stream',
+      { id: 'escape_leaf', kind: 'ride', target: 'R_exit', text: 'Ride the leaf down the hose-stream', at: [15, 0.3, -17],
         radio: 'There\'s a leaf at the tear. Stand on it. Don\'t fall in.',
         radioDone: 'Extraction complete. Moss — you owe Fern a drink.' },
     ],

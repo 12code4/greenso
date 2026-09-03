@@ -6,6 +6,8 @@ import { CollisionWorld } from '../sim/collision';
 import { Input } from '../core/input';
 
 const SENS = 0.0023; // rad per px
+/** Player look options (Update 3 minimal options): [ ] sensitivity, I invert. */
+export const LOOK = { sens: 1, invertY: false };
 const AIM_SENS_SCALE = 0.55;
 const PITCH_MIN = -1.15;
 const PITCH_MAX = 1.35;
@@ -54,9 +56,9 @@ export class ThirdPersonCamera {
   ): void {
     // --- Look ---
     const { dx, dy } = input.consumeMouse();
-    const s = SENS * (aiming ? AIM_SENS_SCALE : 1);
+    const s = SENS * LOOK.sens * (aiming ? AIM_SENS_SCALE : 1);
     this.yaw -= dx * s;
-    this.pitch = THREE.MathUtils.clamp(this.pitch + dy * s, PITCH_MIN, PITCH_MAX);
+    this.pitch = THREE.MathUtils.clamp(this.pitch + (LOOK.invertY ? -dy : dy) * s, PITCH_MIN, PITCH_MAX);
 
     // Recoil spring (kick up, glide back)
     this.recoilVel += (-this.recoil * 140 - this.recoilVel * 18) * dt;

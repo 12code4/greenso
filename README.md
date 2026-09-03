@@ -27,12 +27,19 @@ What's in the build:
 - **Combat** (the M1 essentials the slice can't exist without): Melt Meter health with material damage stages and toy deaths (shatter debris, melt puddles); the Tan roster — Trooper, Based Rifleman (hops between lane nodes, topples), Grenadier, Prone Sniper (glint telegraph), Officer (reinforcement call); rifle, cap pistol, rubber-band sniper (pins to surfaces), cooked grenades with arc preview; soft bullet magnetism; **pose-snap animation** (molded poses snapped at 9 fps — docs/04 bet 2, in embryo).
 - **Grass as perception volumes** — concealment for the player, flattened by the sprinkler's soak on a timer so sightlines open twice a cycle.
 - **Audio v1** — all-procedural WebAudio: cap cracks, plastic clacks, rubber-band thwips, pipe-knock telegraphs, birds and wind, a marching-snare combat loop.
-- **Gates in `tools/`, all green on the Backyard**: `walk.mjs` (P1: 7/7 routes reachable, camera sweep clean), `combat.mjs` (ambush → kills → death → respawn), `firepower.mjs` (flamer melts, bazooka kills), `mission.mjs` (drives all six objectives through the leaf ride to the medal tally), plus `smoke.mjs` and `shot.mjs`. All run headless on game-time clocks. They already caught four real bugs before any human played: a movement-basis sign error, an unparameterized rake, a leaf that departed without its rider, and a crate lip in the stream that walked the rider off the leaf.
+- **Gates in `tools/`, all green on the Backyard**: `walk.mjs` (P1: 7/7 routes reachable, camera sweep clean), `combat.mjs` (ambush → kills → death → respawn), `firepower.mjs` (flamer melts, bazooka kills), `fairplay.mjs` (awareness ladder, grace, pin, checkpoints, dive-tackle), `heroes.mjs` (Sprout, sabotage, rocket, flamer, wave), `mission.mjs` (drives all six objectives through the leaf ride to the medal tally), plus `smoke.mjs` and `shot.mjs`. All run headless on game-time clocks. They already caught four real bugs before any human played: a movement-basis sign error, an unparameterized rake, a leaf that departed without its rider, and a crate lip in the stream that walked the rider off the leaf.
 - **Kit test scene** (`?map=kittest`) — the M0 arena rebuilt at canonical scale: the kit's visual baseline and the controller playground.
 
 **First playtest verdict (PM, 2026-09-02):** graphics good; the level can't be beaten without guidance, enemies lock on instantly, some documented controls aren't built, and — the big one — *the fun and charm of Sarge's Heroes isn't there yet.* The study that answers that is [`docs/09-sarges-heroes-study.md`](docs/09-sarges-heroes-study.md); it sets the plan of record: four updates, **FIREPOWER → TOY SOLDIERS → FAIR PLAY → HEROES & CONTENT**.
 
-**Update 1 — FIREPOWER is in** (docs/09 §5): birthday-candle flamethrower that *melts* Tans, matchstick bazooka, weapon crates as detours, plastic flecks on hits, screaming Tan barks vs deadpan Moss, troopers that charge, denser pockets and a first-contact picket on the lawn. Aim assist is untouched from M0. Not yet: a stranger finishing hint-free (the M2 exit test), real-GPU perf numbers, gamepad, saves, options.
+**All four updates are in** (ship log in docs/09 §5):
+
+1. **FIREPOWER** — birthday-candle flamethrower that *melts* Tans, matchstick bazooka, weapon crates as detours, plastic flecks on hits, screaming Tan barks vs deadpan Moss, troopers that charge, denser pockets. Aim assist untouched from M0.
+2. **TOY SOLDIERS** — Soldier Model v2 (helmet-topped neckless silhouette, gear as geometry, boot flares, seam lines, blinking eyes), weapon = pose, lighter Tan with a rim sheen, Plastosheen 2.0, prop detail pass (gnome, birdbath, track, barricades, grass), stencil HUD.
+3. **FAIR PLAY** — the awareness ladder (view cone, distance, stance, grass; "Huh?" before "Green!"), first-shot grace, sentries that scan, Olive's radio pin + compass strip in inches, visible trail markers and chalk arrows, a checkpoint on every objective, dive-tackle, minimal options.
+4. **HEROES & CONTENT** — Pvt. Sprout the squadmate, Gen. Taupe's ham-radio taunts, the Tan Flamer (stop-drop-roll to put yourself out; his tank blows), a convoy reinforcement wave, battery-crate sabotage as a secondary objective, a bottle-rocket launch to the birdbath as a second route, mission select — and the sprint-dive, documented since M0, finally works.
+
+Not yet: a stranger finishing hint-free (the M2 exit test, now plausible), real-GPU perf numbers, gamepad, saves, the Sandbox tutorial map.
 
 ### Run it
 
@@ -45,7 +52,7 @@ npm run build          # typecheck + bundle to dist/
 npm run preview -- --port 4173 && node tools/walk.mjs backyard   # P1 gate
 ```
 
-In-game: **H** controls · **F8** free-cam · **P** log position (for transcribing blueprint coordinates) · **F9** region overlay.
+In-game: **H** controls · **[ ]** sensitivity · **I** invert Y · **M** mute · **F8** free-cam · **P** log position (for transcribing blueprint coordinates) · **F9** region overlay.
 
 ## Documents
 

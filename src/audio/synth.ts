@@ -8,6 +8,7 @@ type Recipe = (ctx: AudioContext, out: AudioNode, t: number) => void;
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
+  private muted = false;
   private sfx!: GainNode;
   private amb!: GainNode;
   private music!: GainNode;
@@ -40,7 +41,7 @@ export class AudioEngine {
     }
     const c = this.ctx;
     this.master = c.createGain();
-    this.master.gain.value = 0.8;
+    this.master.gain.value = this.muted ? 0 : 0.8;
     this.master.connect(c.destination);
     this.sfx = c.createGain();
     this.sfx.gain.value = 0.9;
@@ -56,6 +57,11 @@ export class AudioEngine {
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.startAmbience();
+  }
+
+  setMuted(on: boolean): void {
+    this.muted = on;
+    if (this.master) this.master.gain.value = on ? 0 : 0.8;
   }
 
   get ready(): boolean {

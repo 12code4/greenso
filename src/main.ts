@@ -11,7 +11,12 @@ import { EnemyManager } from './game/enemies';
 import { Projectiles, Hittable } from './game/projectiles';
 import { PowSystem } from './game/pows';
 import { AircraftSystem } from './game/aircraft';
-import { Barks, TAN_BARKS, MOSS_BARKS } from './game/barks';
+import { Barks, TAN_BARKS, MOSS_BARKS, TAUPE_LINES } from './game/barks';
+import { InteractSystem } from './game/interact';
+import { Squadmate } from './game/squad';
+import { Waypoint } from './game/waypoint';
+import { LOOK } from './game/camera';
+import { Enemy } from './game/enemies';
 import { Hud } from './ui/hud';
 import { AudioEngine } from './audio/synth';
 import { MAPS, DEFAULT_MAP, BASE_GROUND } from './maps/defs';
@@ -45,6 +50,17 @@ const audio = new AudioEngine();
 
 const cam = new ThirdPersonCamera(window.innerWidth / window.innerHeight);
 audio.setListener(cam.camera);
+
+// ---- Minimal options (persisted): look sensitivity, invert Y, mute
+let muted = false;
+try {
+  const saved = JSON.parse(localStorage.getItem('pp.options') ?? '{}') as { sens?: number; invertY?: boolean; muted?: boolean };
+  if (typeof saved.sens === 'number') LOOK.sens = Math.min(3, Math.max(0.3, saved.sens));
+  if (typeof saved.invertY === 'boolean') LOOK.invertY = saved.invertY;
+  if (typeof saved.muted === 'boolean') muted = saved.muted;
+} catch { /* no storage */ }
+audio.setMuted(muted);
+const saveOptions = (): void => { try { localStorage.setItem('pp.options', JSON.stringify({ sens: LOOK.sens, invertY: LOOK.invertY, muted })); } catch { /* ignore */ } };
 
 // ---- Map + world systems
 let spawnWaveHook: (id: string) => void = () => {};
@@ -81,7 +97,15 @@ const enemies: EnemyManager = new EnemyManager(scene, world, {
   reinforce: (id, near) => director.reinforce(id, near),
   throwGrenade: (pos, vel) => projectiles.spawnGrenade(pos, vel, 1.6, 'tan'),
   bark: (e, kind) => barks.sayRandom(e, e.pos, TAN_BARKS[kind], 'tan'),
+  // Tan Flamer's tank: a zero-fuse grenade gives the full blast (visual + radius damage)
+  explode: (at, radius, damage) => { void radius; void damage; projectiles.spawnGrenade(at, new THREE.Vector3(0, 0, 0), 0.01, 'tan'); },
+  // A dive rolls the fire out and buys 0.8 s of immunity, so rolling away works even while he's still spraying
+  playerBurn: (amount, from) => { if (player.diving || fireImmuneT > 0) return; burnAcc += amount; burnFrom = from; player.burning = Math.max(player.burning, 1.5); },
 });
+let burnAcc = 0;
+let fireImmuneT = 0;
+let burnFrom: THREE.Vector3 | null = null;
+let burnWarned = false;
 
 const aircraft = new AircraftSystem(mapDef.aircraft ?? [], scene, {
   sfx: (name, at) => audio.play(name, at, 0.7),
@@ -96,7 +120,38 @@ spawnWaveHook = (id) => director.activate(id);
 director.onActivated = (id) => {
   audio.play('radio', undefined, 0.4);
   aircraft.onEncounterActivated(id);
+  const enc = mapDef.encounters.find((e) => e.id === id);
+  const hasOfficer = !!enc?.units.some((u) => u.type === 'officer');
+  if (hasOfficer || Math.random() < 0.4) hud.radio('GEN. TAUPE', pick(TAUPE_LINES.contact), 4.5, 'tan');
 };
+
+// ---- Squad + interactables
+const squad = new Squadmate(scene, {
+  sfx: (name, at) => audio.play(name, at, 0.6),
+  bark: (text) => barks.say(squad, squad.pos, text, 'fern'),
+});
+const interact = new InteractSystem(mapDef.interactables ?? [], scene, {
+  sfx: (name, at) => audio.play(name, at),
+  onSabotage: (id, n, total) => {
+    void id;
+    hud.toast(`BATTERIES SABOTAGED ${n}/${total}`, 3);
+    cam.addTrauma(0.15);
+    if (Math.random() < 0.6) hud.radio('GEN. TAUPE', pick(TAUPE_LINES.sabotage), 4, 'tan');
+  },
+  onLaunch: (to, T) => {
+    // Ballistic solve to `to` in T seconds under the player's gravity
+    const v = to.clone().sub(player.pos).divideScalar(T);
+    v.y += 0.5 * 19.6 * T;
+    player.vel.copy(v);
+    player.pos.y += 0.06;
+    player.grounded = false;
+    player.launchT = T + 0.5;
+    cam.addTrauma(0.6);
+    audio.play('rocket', player.pos, 1);
+    hud.radio('LT. OLIVE', 'Bottle rocket. Hold on to your helmet.', 3);
+    barks.say(player, player.pos, 'WHEEEE—', 'green');
+  },
+});
 
 const pows = new PowSystem(mapDef.pows ?? [], scene, {
   sfx: (name, at) => audio.play(name, at),
@@ -136,8 +191,34 @@ weapons.onFire = (name, at, noise) => {
 };
 weapons.onThrow = () => audio.play('band', player.pos, 0.5);
 
-// ---- Mission
+// ---- Mission + Olive's radio pin
 let finished = false;
+const waypoint = new Waypoint(scene);
+let rideBoarded = false;
+const regionCenter = (id: string): THREE.Vector3 => {
+  const b = map.regions.get(id).box;
+  return new THREE.Vector3((b.min.x + b.max.x) / 2, b.min.y, (b.min.z + b.max.z) / 2);
+};
+const waypointFor = (id: string): THREE.Vector3 | null => {
+  const o = mapDef.mission?.objectives.find((x) => x.id === id);
+  if (!o) return null;
+  if (o.at) return v3(o.at);
+  switch (o.kind) {
+    case 'reach': case 'discover': case 'ride': return regionCenter(o.target);
+    case 'clear': {
+      const enc = mapDef.encounters.find((e) => e.id === o.target);
+      if (!enc || !enc.units.length) return null;
+      const c = new THREE.Vector3();
+      for (const u of enc.units) c.add(v3(u.at));
+      return c.divideScalar(enc.units.length);
+    }
+    case 'rescue': {
+      const pw = (mapDef.pows ?? []).find((x) => x.id === o.target);
+      return pw ? v3(pw.at) : null;
+    }
+  }
+  return null;
+};
 const mission = mapDef.mission
   ? new MissionFSM(mapDef.mission, {
       radio: (t) => hud.radio('LT. OLIVE', t),
@@ -145,9 +226,26 @@ const mission = mapDef.mission
       onObjectiveStart: (id) => {
         director.onObjective(id);
         map.platforms.onObjective(id);
+        rideBoarded = false;
+        waypoint.setTarget(waypointFor(id));
+        if (id === 'escape_leaf') hud.radio('GEN. TAUPE', pick(TAUPE_LINES.leaf), 4, 'tan');
+      },
+      onObjectiveDone: (id) => {
+        // Checkpoint per objective: you never redo what you already did
+        const last = mapDef.mission!.objectives[mapDef.mission!.objectives.length - 1].id;
+        if (id !== last && player.alive && player.grounded) {
+          map.regions.checkpoint.copy(player.pos);
+          hud.toast('CHECKPOINT');
+        }
+        waypoint.setTarget(null);
+        if (id === 'clear_gnome' && !squad.active) {
+          squad.join(new THREE.Vector3(-23, 0, -3));
+          hud.radio('LT. OLIVE', 'Pvt. Sprout\'s been hiding in the flowerpot. He\'s yours now. Try to bring him back.', 5);
+        } else if (id !== last && Math.random() < 0.35) hud.radio('GEN. TAUPE', pick(TAUPE_LINES.objective), 4, 'tan');
       },
       onComplete: () => {
         finished = true;
+        waypoint.setTarget(null);
         hud.showTally({
           title: mapDef.mission!.title,
           timeSeconds: mission!.elapsed,
@@ -157,6 +255,8 @@ const mission = mapDef.mission
           powsFreed: mission!.powsFreed,
           accuracy: weapons.stats.shots ? weapons.stats.hits / weapons.stats.shots : 0,
           deaths: player.deaths,
+          batteries: interact.sabotaged,
+          batteriesTotal: interact.sabotageTotal,
         });
       },
       sfx: (n) => audio.play(n),
@@ -179,7 +279,10 @@ player.onDamaged = (amount, from) => {
 player.onDeath = () => {
   audio.play('shatter', player.pos);
   audio.play('death');
-  hud.radio('LT. OLIVE', pick(DEATH_LINES), 3);
+  if (Math.random() < 0.45) hud.radio('GEN. TAUPE', pick(TAUPE_LINES.death), 3.5, 'tan');
+  else hud.radio('LT. OLIVE', pick(DEATH_LINES), 3);
+  squad.onPlayerDeath();
+  burnAcc = 0;
 };
 
 map.pickups.onCollect = (kind, id, at) => {
@@ -204,13 +307,15 @@ map.pickups.onCollect = (kind, id, at) => {
   }
 };
 
-if (mapDef.mission) hud.setBriefing('PLASTIC PLATOON', mapDef.mission.title.toUpperCase(), mapDef.mission.briefing);
-else hud.setBriefing('PLASTIC PLATOON', mapDef.title.toUpperCase(), []);
+const missionList = Object.values(MAPS).map((m) => ({ id: m.id, title: m.title, sub: m.mission?.title ?? m.realFootprint, current: m.id === mapDef.id }));
+if (mapDef.mission) hud.setBriefing('PLASTIC PLATOON', mapDef.mission.title.toUpperCase(), mapDef.mission.briefing, missionList);
+else hud.setBriefing('PLASTIC PLATOON', mapDef.title.toUpperCase(), [], missionList);
 hud.setMarbles(0, map.pickups.marblesTotal);
 hud.setMelt(1);
 
 const sunOffset = map.sun.position.clone();
 const pushTmp = new THREE.Vector3();
+const diveHits = new Set<Enemy>();
 
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -237,6 +342,7 @@ if (TEST_MODE) {
     },
     teleport: (x: number, y: number, z: number) => { player.pos.set(x, y, z); player.vel.set(0, 0, 0); },
     heal: () => player.heal(100),
+    setYaw: (y: number) => { cam.yaw = y; },
     give: (id: 'flamer' | 'bazooka' | 'sniper') => { weapons.unlock(id); weapons.addFuel(200); weapons.addRockets(8); weapons.addBands(12); },
     activate: (id: string) => director.activate(id),
     // Flow tests: force-clear an encounter (combat is gated separately)
@@ -271,6 +377,15 @@ if (TEST_MODE) {
       shots: weapons.stats.shots,
       hits: weapons.stats.hits,
       boomPulled: cam.boomPulledFrac,
+      checkpoint: map.regions.checkpoint.toArray(),
+      waypoint: waypoint.target?.toArray() ?? null,
+      suspicious: enemies.list.filter((e) => e.alive && e.state === 'suspicious').length,
+      toppled: enemies.list.filter((e) => e.alive && e.state === 'toppled').length,
+      crouched: player.crouched,
+      diving: player.diving,
+      squad: squad.active,
+      burning: player.burning,
+      batteries: interact.sabotaged,
     }),
   };
 }
@@ -311,6 +426,14 @@ function frame(): void {
       player.update(dt, input, cam.yaw, aiming, world);
       if (player.landed) audio.play('clack', player.pos, 0.6);
       weapons.update(dt, input, cam, aiming, hittables);
+      // Dive-tackle: sprint + C into a Tan topples the molded ones, shoves the rest
+      if (player.diving) {
+        const hit = enemies.tackle(player.pos, player.vel, diveHits);
+        if (hit) {
+          cam.addTrauma(0.25);
+          if (Math.random() < 0.7) barks.sayRandom(player, player.pos, hit.molded ? ['Timber.', 'Down you go.'] : ['Oof.', 'Move.'], 'green');
+        }
+      } else if (diveHits.size) diveHits.clear();
     } else if (!player.alive && player.updateDead(dt)) {
       player.respawnAt(map.regions.checkpoint);
       map.platforms.resetArmed();
@@ -322,12 +445,24 @@ function frame(): void {
     projectiles.update(dt, world, hittables);
     enemies.update(dt, player, (p) => map.grass.concealmentAt(p));
     aircraft.update(dt, player.pos, player.alive, world);
-    director.update();
+    director.update(dt);
+    squad.update(dt, player, cam.yaw, enemies, world);
     targets.update(dt, time);
     map.regions.update(player.pos);
     map.grass.update(dt, time);
     map.pickups.update(dt, time, player.pos);
-    const prompt = pows.update(dt, player.pos, input.held('KeyE') && player.alive);
+    const holdingE = input.held('KeyE') && player.alive;
+    const prompt = pows.update(dt, player.pos, holdingE) ?? interact.update(dt, time, player.pos, holdingE);
+    // Candle-fire on Moss: damage in ~4-point ticks, keeps burning after the cone; a dive rolls it out
+    if (player.alive && player.burning > 0) {
+      player.burning -= dt;
+      burnAcc += 5 * dt;
+      if (player.diving) { player.burning = 0; burnAcc = 0; fireImmuneT = 0.8; hud.toast('ROLLED IT OUT'); }
+      else if (burnAcc >= 4) { player.takeDamage(burnAcc, burnFrom); burnAcc = 0; }
+      if (!burnWarned) { burnWarned = true; hud.radio('LT. OLIVE', 'You\'re on fire! Sprint and dive — C — roll it out!', 4); }
+    } else burnAcc = 0;
+    if (fireImmuneT > 0) fireImmuneT -= dt;
+    hud.setBurning(player.alive && player.burning > 0);
     hud.setPrompt(prompt?.text ?? null, prompt?.progress ?? 0);
     pows.overwatch(dt, enemies, world);
     if (mission) mission.update(dt, { playerPos: player.pos, regions: map.regions, director, isFreed: (id) => pows.isFreed(id) });
@@ -340,13 +475,30 @@ function frame(): void {
     map.sun.target.position.copy(player.pos);
 
     if (input.pressed('KeyH')) hud.toggleHelp();
+    if (input.pressed('BracketRight')) { LOOK.sens = Math.min(3, LOOK.sens * 1.18); saveOptions(); hud.toast(`LOOK SENSITIVITY ${LOOK.sens.toFixed(2)}×`); }
+    if (input.pressed('BracketLeft')) { LOOK.sens = Math.max(0.3, LOOK.sens / 1.18); saveOptions(); hud.toast(`LOOK SENSITIVITY ${LOOK.sens.toFixed(2)}×`); }
+    if (input.pressed('KeyI')) { LOOK.invertY = !LOOK.invertY; saveOptions(); hud.toast(`INVERT Y ${LOOK.invertY ? 'ON' : 'OFF'}`); }
+    if (input.pressed('KeyM')) { muted = !muted; audio.setMuted(muted); saveOptions(); hud.toast(muted ? 'SOUND OFF' : 'SOUND ON'); }
+
+    // Olive's pin + compass strip
+    const o = mission?.active ?? null;
+    if (o && o.kind === 'ride' && o.at && !rideBoarded && player.pos.distanceTo(v3(o.at)) < 2.5) {
+      rideBoarded = true;
+      waypoint.setTarget(regionCenter(o.target));
+    }
+    waypoint.update(time, player.pos);
+    if (waypoint.target) {
+      const dx = waypoint.target.x - player.pos.x, dz = waypoint.target.z - player.pos.z;
+      const rel = Math.atan2(Math.sin(Math.atan2(dx, dz) - cam.yaw), Math.cos(Math.atan2(dx, dz) - cam.yaw));
+      hud.setCompass(rel, Math.hypot(dx, dz));
+    } else hud.setCompass(null, 0);
 
     hud.setAiming(aiming);
     hud.setWeapon(weapons.current.name, weapons.ammoText());
     hud.setMelt(player.hp / player.maxHp);
     hud.setMarbles(map.pickups.marblesFound, map.pickups.marblesTotal);
     if (lanes.length) hud.setStats(`TARGETS DOWN ${targets.downed} · ACCURACY ${weapons.stats.shots ? Math.round((weapons.stats.hits / weapons.stats.shots) * 100) : 0}%`);
-    else if (enemies.kills) hud.setStats(`TANS DOWN ${enemies.kills}${enemies.melts ? ` · MELTED ${enemies.melts}` : ''}`);
+    else if (enemies.kills || interact.sabotaged) hud.setStats(`TANS DOWN ${enemies.kills}${enemies.melts ? ` · MELTED ${enemies.melts}` : ''}${interact.sabotageTotal ? ` · BATTERIES ${interact.sabotaged}/${interact.sabotageTotal}` : ''}`);
   }
 
   audio.update(dt);
