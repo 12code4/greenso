@@ -77,12 +77,21 @@ reg({
     const wood = mat('WOOD_WARM', pickColor(v, [OAK, 0x9a7a52]));
     g.add(boxMesh(w, 1.4, d, wood, h - 0.7));
     const colliders: LocalBox[] = [solid(w, 1.4, d, h - 0.7)];
-    for (const x of [-w / 2 + 2, w / 2 - 2]) {
-      const leg = boxMesh(3, h - 1.4, d - 2, wood, (h - 1.4) / 2);
-      leg.position.set(x, (h - 1.4) / 2, 0);
-      g.add(leg);
-      colliders.push(solid(3, h - 1.4, d - 2, (h - 1.4) / 2, x));
+    // A drawer pedestal at the +x end, solid floor-to-desktop. A climb must land on something
+    // solid: arriving on a thin slab with open air under it surfaces you INSIDE the slab.
+    const ped = boxMesh(10, h - 1.4, d, wood, (h - 1.4) / 2);
+    ped.position.set(w / 2 - 5, (h - 1.4) / 2, 0);
+    g.add(ped);
+    colliders.push(solid(10, h - 1.4, d, (h - 1.4) / 2, w / 2 - 5));
+    for (let i = 0; i < 3; i++) {
+      const face = boxMesh(9, 3.4, 0.6, mat('WOOD_WARM', 0xc9a66b), 2.4 + i * 4);
+      face.position.set(w / 2 - 5, 2.4 + i * 4, -d / 2 - 0.3);
+      g.add(face);
     }
+    const leg = boxMesh(3, h - 1.4, d - 2, wood, (h - 1.4) / 2);
+    leg.position.set(-w / 2 + 2, (h - 1.4) / 2, 0);
+    g.add(leg);
+    colliders.push(solid(3, h - 1.4, d - 2, (h - 1.4) / 2, -w / 2 + 2));
     // The keyboard tray is visual only: as a collider it is a trap, catching anyone who drops
     // through the desktop and pinning them under it with 2 u of head room.
     const tray = boxMesh(w * 0.5, 0.8, 9, wood, 10);
