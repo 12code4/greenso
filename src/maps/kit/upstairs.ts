@@ -83,9 +83,10 @@ reg({
       g.add(leg);
       colliders.push(solid(3, h - 1.4, d - 2, (h - 1.4) / 2, x));
     }
+    // The keyboard tray is visual only: as a collider it is a trap, catching anyone who drops
+    // through the desktop and pinning them under it with 2 u of head room.
     const tray = boxMesh(w * 0.5, 0.8, 9, wood, 10);
     tray.position.set(0, 10, -d / 2 + 5); g.add(tray);
-    colliders.push(solid(w * 0.5, 0.8, 9, 10, 0, -d / 2 + 5));
     return { mesh: g, colliders };
   },
 });
