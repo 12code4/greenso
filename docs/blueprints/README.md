@@ -1,6 +1,6 @@
 # Blueprints — the map construction contracts
 
-> **2026-09-03:** the world is now one house (docs/10-house-atlas.md). Blueprints 01–08 below are retired *as separate maps*; their places live on as rooms and zones of the house. New blueprints are **per floor**: `floor-G.md` (the ground floor, in construction), then B, U, A, and the yard.
+> **2026-09-03:** the world is now one house (docs/10-house-atlas.md). Blueprints 01–08 below are retired *as separate maps*; their places live on as rooms and zones of the house. New blueprints are **per floor**: `floor-G.md` (the ground floor, **built**), `floor-U.md` (the upper floor, P0 done), then B, A, and the yard.
 
 > **Superseded (2026-09-03):** these eight per-map contracts are retired as world structure; the places they describe become rooms and zones of the house in [`docs/10-house-atlas.md`](../10-house-atlas.md). Per-floor blueprints (`floor-B.md`, `floor-G.md`, …) replace them; the skeleton below still applies to those.
 
@@ -31,6 +31,7 @@ Campaign order is fiction; **build order** (bible, re-affirmed post-audit): Back
 | 6 | The Bedroom at Night | `map-06-bedroom.md` | ready for P1 |
 | 7 | The Workbench | `map-07-workbench.md` | ready for P1 |
 | 8 | The Picnic Table | `map-08-picnic.md` | ready for P1 |
-| G | **The Ground Floor** (house) | `floor-G.md` | **P0 done, P1 in construction** — `src/maps/defs/house/g.ts` |
+| G | **The Ground Floor** (house) | `floor-G.md` | **built** — `src/maps/defs/house/g.ts`; P1–P5 passing (`walk.mjs g` 13 routes, `house-g.mjs` 21/21); §11 logs the as-built deviations |
+| U | **The Upper Floor** (house) | `floor-U.md` | **P0 done** — the kids' world, built around the living room's vault void; awaiting P1 |
 
 All dimensions are canonical units (real cm ÷ 5.4, docs/06 §1) and all maps passed the real-footprint sanity check at P0.

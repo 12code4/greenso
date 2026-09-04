@@ -2110,4 +2110,106 @@ reg({
   },
 });
 
+// ------------------------------------------------------------ architectural detail
+// The small stuff that only reads at 1:32: an outlet is chest-high on a soldier. Front faces local −z
+// (the kit convention — see clock_wall, key_hook), so place these with the yaw that looks into the room.
+
+reg({
+  id: 'outlet',
+  // A duplex wall outlet: 7 × 11.5 cm plate → 1.3 × 2.1 u, 30 cm off the floor. The landmark of being two inches tall.
+  dims: [1.4, 2.2, 0.35],
+  build(v) {
+    const g = new THREE.Group();
+    const plate = mat('PLASTIC_TOY', pickColor(v, [0xf2ece0, 0xe8dcc8]));
+    g.add(boxMesh(1.4, 2.2, 0.3, plate, 0));
+    const dark = mat('PLASTIC_TOY', 0x3a3630);
+    for (const y of [0.5, -0.5]) {
+      for (const x of [-0.22, 0.22]) { const slot = boxMesh(0.12, 0.42, 0.12, dark, y); slot.position.set(x, y, -0.2); g.add(slot); }
+      const gnd = cylMesh(0.13, 0.12, dark, y - 0.42, 8); gnd.rotation.x = Math.PI / 2; gnd.position.set(0, y - 0.42, -0.2); g.add(gnd);
+    }
+    const screw = boxMesh(0.16, 0.05, 0.1, dark, 0); screw.position.set(0, 0, -0.19); g.add(screw);
+    return { mesh: g, colliders: [] };
+  },
+});
+
+reg({
+  id: 'light_switch',
+  // A toggle switch plate at 120 cm → 22 u. Variant 1 is flipped up (on).
+  dims: [1.4, 2.4, 0.4],
+  build(v) {
+    const g = new THREE.Group();
+    g.add(boxMesh(1.4, 2.4, 0.3, mat('PLASTIC_TOY', 0xf2ece0), 0));
+    const lever = boxMesh(0.4, 1.1, 0.35, mat('PLASTIC_TOY', 0xf8f4ea), 0);
+    lever.position.set(0, v % 2 ? 0.18 : -0.18, -0.3);
+    lever.rotation.x = v % 2 ? -0.35 : 0.35;
+    g.add(lever);
+    return { mesh: g, colliders: [] };
+  },
+});
+
+reg({
+  id: 'floor_register',
+  // A floor heat register, 10 × 30 cm → 1.9 × 5.6 u, with louvre slats. Lies flat; you can see the duct dark below.
+  dims: [5.6, 0.6, 2.2],
+  walkableTop: true,
+  build(v, size) {
+    const [w, , d] = sz(size, [5.6, 0.6, 2.2]);
+    const g = new THREE.Group();
+    const metal = mat('METAL_KITCHEN', pickColor(v, [0xb8a888, 0xa8a49c]));
+    // Nearly flush with the floor (a real register stands ~1 cm proud = 0.2 u), so you walk straight over it.
+    g.add(boxMesh(w, 0.18, 0.5, metal, 0.19).translateZ(-d / 2 + 0.25));
+    g.add(boxMesh(w, 0.18, 0.5, metal, 0.19).translateZ(d / 2 - 0.25));
+    for (const x of [-w / 2 + 0.25, w / 2 - 0.25]) g.add(boxMesh(0.5, 0.18, d, metal, 0.19).translateX(x));
+    g.add(boxMesh(w - 1, 0.1, d - 1, mat('PLASTIC_TOY', 0x14120e), 0.04)); // the dark of the duct
+    for (let i = 0; i < 7; i++) {
+      const slat = boxMesh(w - 1.2, 0.3, 0.2, metal, 0.16);
+      slat.position.set(0, 0.16, -d / 2 + 0.7 + i * ((d - 1.4) / 6));
+      slat.rotation.x = 0.5;
+      g.add(slat);
+    }
+    return { mesh: g, colliders: [solid(w, 0.24, d, 0.12)] };
+  },
+});
+
+reg({
+  id: 'curtain',
+  // A pair of curtain panels on a rod over a window. size = [w, h, d]; hangs from the top of its box.
+  dims: [34, 30, 3],
+  build(v, size) {
+    const [w, h] = sz(size, [34, 30, 3]);
+    const g = new THREE.Group();
+    const cloth = mat('FABRIC_SOFT', pickColor(v, [0xc9b48a, 0x8aa0b8, 0xb88a8a, 0xe8dcc0]));
+    const rod = cylMesh(0.5, w + 4, mat('METAL_KITCHEN', 0x8a6a48), h, 10);
+    rod.rotation.z = Math.PI / 2; rod.position.y = h; g.add(rod);
+    for (const end of [-1, 1]) { const fin = new THREE.Mesh(new THREE.SphereGeometry(0.9, 8, 6), mat('METAL_KITCHEN', 0xd8b04a)); fin.position.set(end * (w / 2 + 2), h, 0); g.add(fin); }
+    // Two panels, each a few pleats: they cover the outer thirds and leave the middle open
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 5; i++) {
+        const pw = w * 0.075;
+        const pleat = boxMesh(pw, h - 1.5, 1.4 + (i % 2) * 0.7, cloth, (h - 1.5) / 2);
+        pleat.position.set(side * (w / 2 - pw * (i + 0.5)), (h - 1.5) / 2, -0.3 - (i % 2) * 0.2);
+        g.add(pleat);
+      }
+    }
+    return { mesh: g, colliders: [] };
+  },
+});
+
+reg({
+  id: 'ceiling_light',
+  // A flush-mount dome. Variant 0 is OFF — nobody is home, it is the middle of the day, and that is the point.
+  // Variant 1 is on (emissive + a soft point light).
+  dims: [10, 4, 10],
+  build(v) {
+    const g = new THREE.Group();
+    const on = v % 2 === 1;
+    const base = cylMesh(2.2, 0.8, mat('METAL_KITCHEN', 0xd8d0c0), -0.4, 16); g.add(base);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(4.2, 16, 10, 0, Math.PI * 2, Math.PI * 0.55, Math.PI * 0.45),
+      mat('GLASS_CHEAP', on ? 0xfff4d8 : 0xe8e4d8, on ? { emissive: 0xffe9b0 } : {}));
+    dome.position.y = -0.6; g.add(dome);
+    if (on) { const light = new THREE.PointLight(0xffe0b0, 14, 70, 2); light.position.y = -3; g.add(light); }
+    return { mesh: g, colliders: [] };
+  },
+});
+
 export const HOUSE_KIT_LOADED = true;

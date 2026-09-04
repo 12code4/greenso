@@ -287,6 +287,32 @@ const props: PropInstance[] = [
   P('toy_dino', [30, 0, 100], 1.8), // hall
   P('toy_blocks', [-40, 0, -95], 0.2), // mudroom, by the dog bed
   P('toy_dino', [110, 0, 2], 0.5), // garage, by the bikes
+  // ---- Architectural detail. Yaw faces the room: 0 → −z, π → +z, π/2 → −x, −π/2 → +x.
+  // Outlets sit 30 cm up (5.5 u) — chest height on a soldier, which is the whole joke.
+  P('outlet', [-110, 5.5, -32.6], 0), P('outlet', [-70, 5.5, -32.6], 0, { variant: 1 }),
+  P('outlet', [-137, 5.5, -45], -Math.PI / 2), P('outlet', [-88, 21, -109], Math.PI), // the counter backsplash
+  P('outlet', [-100, 5.5, -29.6], Math.PI), P('outlet', [-137, 5.5, 40], -Math.PI / 2, { variant: 1 }),
+  P('outlet', [-20, 5.5, -29.6], Math.PI), P('outlet', [40, 5.5, -29.6], Math.PI, { variant: 1 }),
+  P('outlet', [59.6, 5.5, 40], Math.PI / 2), P('outlet', [-80, 5.5, 70.6], Math.PI),
+  P('outlet', [40, 5.5, 70.6], Math.PI, { variant: 1 }), P('outlet', [0, 5.5, 109], 0),
+  P('outlet', [62.6, 5.5, -40], -Math.PI / 2), P('outlet', [137, 5.5, -70], Math.PI / 2, { variant: 1 }),
+  P('outlet', [30, 5.5, -32.6], 0), P('outlet', [62.6, 5.5, 30], -Math.PI / 2),
+  // Switches at 120 cm (22 u), beside the doors
+  P('light_switch', [-92, 22, -32.6], 0), P('light_switch', [43, 22, -29.6], Math.PI, { variant: 1 }),
+  P('light_switch', [14, 22, 109], 0), P('light_switch', [62.6, 22, -52], -Math.PI / 2, { variant: 1 }),
+  P('light_switch', [62.6, 22, 22], -Math.PI / 2), P('light_switch', [-108, 22, 67.6], 0),
+  // Floor registers, under the windows and along the outside walls (the duct network of docs/11 #9)
+  P('floor_register', [-134, 0, -70], Math.PI / 2), P('floor_register', [-134, 0, -15], Math.PI / 2, { variant: 1 }),
+  P('floor_register', [0, 0, -27], 0), P('floor_register', [-40, 0, 107], 0, { variant: 1 }),
+  P('floor_register', [134, 0, 30], Math.PI / 2), P('floor_register', [40, 0, -107], 0),
+  // Ceiling fixtures — all off (it is the middle of a weekday and nobody is home) except the garage,
+  // where somebody left the light on.
+  P('ceiling_light', [-94, 50, -71]), P('ceiling_light', [0, 50, 90]), P('ceiling_light', [38, 50, -71]),
+  P('ceiling_light', [100, 50, -50], 0, { variant: 1 }), P('ceiling_light', [-24, 50, -80]), P('ceiling_light', [76, 50, 29]),
+  // Curtains at the windows
+  P('curtain', [-137, 14, -70], -Math.PI / 2, { size: [34, 30, 3] }), // kitchen west
+  P('curtain', [-137, 9, -15], -Math.PI / 2, { size: [24, 36, 3], variant: 1 }), // dining west
+  P('curtain', [137, 24, 30], Math.PI / 2, { size: [24, 24, 3], variant: 2 }), // over the stairs
 ];
 
 // ---------------------------------------------------------------- regions

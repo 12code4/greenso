@@ -321,8 +321,8 @@ The battery-drawer war is dropped (decision 12). All three keep the cast (docs/0
 ## 11. Production order
 
 1. **Story pick** (PM) and the secrets review (docs/11). One week of blueprints follows.
-2. **Ground floor first** (in construction since 2026-09-03: `docs/blueprints/floor-G.md`, `src/maps/defs/house/g.ts`, `?map=g`), as the world's proof: it is the hub, the largest, the most recognizable, and it carries the vaulted living room climb and the dog door to the yard. Its blueprint `docs/blueprints/floor-G.md` transcribes this atlas; P1 walk gate with the new `walk.mjs` at honest scale.
-3. **Basement** (campaign start, contained, the chute), then **Upper**, then **Attic**, then the **Yard rebuild** (it reuses the most).
+2. **Ground floor first — built** (2026-09-03/04: `docs/blueprints/floor-G.md`, `src/maps/defs/house/g.ts`, `?map=g`), as the world's proof: it is the hub, the largest, the most recognizable, and it carries the vaulted living room climb and the dog door to the yard. P1–P5 gated green; the blueprint's §11 is its as-built log.
+3. **Upper floor next** (P0 written 2026-09-04: `docs/blueprints/floor-U.md`). It comes before the basement because it is the floor the ground floor's mission *points at* — G1 ends by climbing the stairs, and the payoff should exist. It also reuses the most of G's kit and inherits the vault void as free structure. Then the **Basement** (campaign start, the chute), the **Attic** (finale), and the **Yard rebuild**.
 4. Systems in parallel with G: `FloorLoader` + `WorldState`, patrols, pockets, side quests, factions.
 5. Each floor: P0 blueprint → P1 greybox + walk gate → P2 population → P3 mission → P4 Decoration With Heart (§8 checked) → P5 audio → P6 playtest.
 
