@@ -21,7 +21,7 @@ async function run(query, steps) {
 }
 
 // ---- G1
-await run('&mission=g1', async ({ api, state, gameWait }) => {
+await run('&mission=g1', async ({ api, state, gameWait, page }) => {
   await api('window.__game.resetWorld()');
   let s = await state();
   check('G1 selected', s.mission === 'g1', `mission=${s.mission} objective=${s.objective}`);
@@ -65,11 +65,11 @@ await run('&mission=g1', async ({ api, state, gameWait }) => {
   await gameWait(3.5);
   s = await state();
   check('G1 complete', s.complete === true, `complete=${s.complete} objective=${s.objective}`);
-  // step onto the back of the top step: the stairs link (open once G1 is done)
+  // Step onto the top step: with floor U built, the stairs link really loads it (the page navigates).
   await api('window.__game.teleport(110, 46.1, 11.2)');
-  await gameWait(1.5);
-  s = await state();
-  check('the stairs link is found', s.found.includes('L_stairs_G'), `found=${s.found}`);
+  await page.waitForURL(/map=u/, { timeout: 30000 }).then(
+    () => check('the stairs carry you up to the upper floor', true, page.url().split('?')[1]),
+    () => check('the stairs carry you up to the upper floor', false, `still at ${page.url().split('?')[1]}`));
 });
 
 // ---- G2 (world state carries G1's completion)
