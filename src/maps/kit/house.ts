@@ -116,7 +116,10 @@ reg({
       leg.position.set(x, 5.5, z);
       g.add(leg);
     }
-    return { mesh: g, colliders: [solid(6, 12, 6)] };
+    // Seat disc solid, legs solid, open underneath (shoot-through like the chairs)
+    const colliders: LocalBox[] = [solid(6, 1.6, 6, 11.2)];
+    for (const [x, z] of [[-1.8, -1.8], [1.8, -1.8], [-1.8, 1.8], [1.8, 1.8]]) colliders.push(solid(0.9, 11, 0.9, 5.5, x, z));
+    return { mesh: g, colliders };
   },
 });
 
@@ -890,8 +893,8 @@ reg({
       const leg = boxMesh(0.8, 7.5, 0.8, wood, 3.75);
       leg.position.set(x, 3.75, z);
       g.add(leg);
+      colliders.push(solid(0.8, 7.5, 0.8, 3.75, x, z)); // legs only: shots and sightlines pass under the seat
     }
-    colliders.push(solid(8, 7.5, 8, 3.75));
     // back: two stiles and three slats
     for (const x of [-3.4, 3.4]) {
       const stile = boxMesh(0.8, 8.5, 0.8, wood, 12.75);
@@ -1510,7 +1513,7 @@ reg({
     for (const [zc, sign] of [[-18.5, 1], [19.5, -1]]) {
       const wind = boxMesh(w - 6, 0.4, glassLen + 0.4, glass, 0);
       wind.position.set(0, 22, zc);
-      wind.rotation.x = sign * rake;
+      wind.rotation.x = -sign * rake; // the pane rakes the same way its walkable collider ramps (hood/trunk low → roof high)
       g.add(wind);
       // Stepped colliders up the rake: 0.3 u risers over 0.39 u — one auto-step each
       const steps = Math.ceil(10 / 0.3);
@@ -1625,7 +1628,8 @@ reg({
     const fork = boxMesh(1, 12, 1, frame, 13); fork.position.x = 9.5; fork.rotation.z = -0.15; g.add(fork);
     const pedal = cylMesh(2.6, 0.4, frame, 6.8, 16); pedal.rotation.x = Math.PI / 2; pedal.position.set(-2, 6.8, 0.6); g.add(pedal);
     g.rotation.z = 0;
-    return { mesh: g, colliders: [solid(33, 20, 5, 10)] };
+    // Only the two wheels are solid — the frame is open air, so a soldier walks between them (and grabs the marble under the crank).
+    return { mesh: g, colliders: [solid(3, 13, 5, 6.5, -11, 0), solid(3, 13, 5, 6.5, 11, 0)] };
   },
 });
 
@@ -2003,6 +2007,106 @@ reg({
     toe.position.set(1.2, 0.55, 0); toe.rotation.y = v * 0.7;
     g.add(toe);
     return { mesh: g, colliders: [] };
+  },
+});
+
+// ------------------------------------------------------------ toys & charm (a kids' house — the BOXED story)
+
+reg({
+  id: 'teddy_bear',
+  // A plush bear slumped in a corner. Soft cover; the kids' presence.
+  dims: [10, 14, 8],
+  cover: 'CC',
+  build(v) {
+    const g = new THREE.Group();
+    const fur = mat('FABRIC_SOFT', pickColor(v, [0xb98a52, 0x8a6a48, 0xd8b48a]));
+    const pale = mat('FABRIC_SOFT', 0xe8d8bc);
+    const dark = mat('PLASTIC_TOY', 0x2a2018);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(3.6, 12, 10), fur); body.scale.set(1, 1.15, 0.9); body.position.y = 5.2; body.castShadow = true; g.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(3, 12, 10), fur); head.position.y = 10.6; head.castShadow = true; g.add(head);
+    for (const x of [-2.1, 2.1]) { const ear = new THREE.Mesh(new THREE.SphereGeometry(1.1, 8, 6), fur); ear.position.set(x, 12.8, 0); g.add(ear); }
+    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(1.3, 8, 6), pale); muzzle.position.set(0, 10, -2.4); muzzle.scale.set(1, 0.8, 0.8); g.add(muzzle);
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), dark); nose.position.set(0, 10.3, -3.5); g.add(nose);
+    for (const x of [-1.1, 1.1]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), dark); eye.position.set(x, 11.2, -2.6); g.add(eye); }
+    for (const x of [-3.8, 3.8]) { const arm = new THREE.Mesh(new THREE.SphereGeometry(1.5, 8, 6), fur); arm.scale.set(0.9, 1.6, 0.9); arm.position.set(x, 5.5, -0.5); arm.rotation.z = x < 0 ? 0.5 : -0.5; g.add(arm); }
+    for (const x of [-2, 2]) { const leg = new THREE.Mesh(new THREE.SphereGeometry(1.7, 8, 6), fur); leg.scale.set(1, 1, 1.5); leg.position.set(x, 1.8, -1.8); g.add(leg); }
+    return { mesh: g, colliders: [solid(8, 11, 7, 5.5)] };
+  },
+});
+
+reg({
+  id: 'toy_blocks',
+  // Wooden alphabet blocks: two stacked, one beside. A little step/cover.
+  dims: [11, 7, 5],
+  walkableTop: true,
+  cover: 'CC',
+  build(v) {
+    const g = new THREE.Group();
+    const cols = [0xc93a3a, 0x2f63b8, 0xe0b040, 0x3c9a4a];
+    const letters = ['A', 'B', 'C', 'D', 'P', 'I', 'G'];
+    const colliders: LocalBox[] = [];
+    const place = (x: number, y: number, z: number, i: number): void => {
+      const s = 3.4;
+      const cube = boxMesh(s, s, s, mat('WOOD_WARM', cols[(v + i) % cols.length]), y + s / 2);
+      cube.position.set(x, y + s / 2, z); cube.rotation.y = (i - 1) * 0.15; g.add(cube);
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(s * 0.8, s * 0.8), texMat(textTex([letters[(v + i) % letters.length]], '#f4e6c0', '#3a3a3a', 64, 64, 'bold 46px Impact, sans-serif')));
+      face.position.set(x, y + s / 2, z - s / 2 - 0.05); g.add(face);
+      colliders.push(solid(s, s, s, y + s / 2, x, z));
+    };
+    place(-3.4, 0, 0, 0); place(0, 0, 0.4, 1); place(-1.6, 3.4, 0.2, 2);
+    return { mesh: g, colliders };
+  },
+});
+
+reg({
+  id: 'board_game',
+  // A board-game box left on the floor or a table. Walkable top.
+  dims: [16, 3.4, 16],
+  walkableTop: true,
+  cover: 'CC',
+  build(v) {
+    const g = new THREE.Group();
+    g.add(boxMesh(16, 3.4, 16, mat('PAPERBOARD', pickColor(v, [0xc93a3a, 0x2f63b8, 0x3c9a4a])), 1.7));
+    const lid = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), texMat(textTex(['GAME', 'NIGHT'], '#f4e6c0', '#c93a3a', 256, 256, 'bold 46px Impact, sans-serif')));
+    lid.rotation.x = -Math.PI / 2; lid.position.y = 3.42; g.add(lid);
+    return { mesh: g, colliders: [solid(16, 3.4, 16, 1.7)] };
+  },
+});
+
+reg({
+  id: 'lava_lamp',
+  // A lava lamp: a warm glow on a shelf or table. Its own soft point light.
+  dims: [6, 18, 6],
+  build(v) {
+    const g = new THREE.Group();
+    const metal = mat('METAL_KITCHEN', 0xd8b04a);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 3, 3.5, 16), metal); base.position.y = 1.75; g.add(base);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, 2.5, 16), metal); cap.position.y = 15.5; g.add(cap);
+    const glow = pickColor(v, [0xff6a2a, 0x3ac0e0, 0x8a4ad0]);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, 10, 16), mat('GLASS_CHEAP', glow, { emissive: glow }));
+    body.position.y = 8.5; g.add(body);
+    for (let i = 0; i < 3; i++) { const blob = new THREE.Mesh(new THREE.SphereGeometry(1 - i * 0.2, 8, 6), mat('PLASTIC_TOY', glow, { emissive: glow })); blob.position.set(0, 5 + i * 3, 0); g.add(blob); }
+    const light = new THREE.PointLight(glow, 6, 30, 2); light.position.y = 8.5; g.add(light);
+    return { mesh: g, colliders: [solid(6, 17, 6, 8.5)] };
+  },
+});
+
+reg({
+  id: 'toy_dino',
+  // A plastic dinosaur — the kids' toy, and a wink at the modern toys the Tans allied with. Small cover.
+  dims: [6, 11, 15],
+  cover: 'CC',
+  build(v) {
+    const g = new THREE.Group();
+    const skin = mat('PLASTIC_TOY', pickColor(v, [0x3c9a4a, 0x2f8ab8, 0xe08a22]));
+    const body = boxMesh(4, 4, 8, skin, 5); body.position.z = 1; g.add(body);
+    const t1 = boxMesh(3, 3, 4, skin, 4.5); t1.position.set(0, 4.5, 6); g.add(t1);
+    const t2 = boxMesh(1.6, 1.6, 4, skin, 3.5); t2.position.set(0, 3.5, 9.5); t2.rotation.x = 0.3; g.add(t2);
+    const neck = boxMesh(2.6, 5, 2.6, skin, 8); neck.position.set(0, 8, -3); g.add(neck);
+    const head = boxMesh(3, 2.6, 4.5, skin, 10.5); head.position.set(0, 10.5, -4.5); g.add(head);
+    for (const [x, z] of [[-1.8, -1.5], [1.8, -1.5], [-1.8, 3.5], [1.8, 3.5]]) { const leg = boxMesh(1.4, 3, 1.4, skin, 1.5); leg.position.set(x, 1.5, z); g.add(leg); }
+    for (let i = 0; i < 3; i++) { const plate = boxMesh(0.5, 2.2, 1.8, mat('PLASTIC_TOY', 0xe0b040), 7.5); plate.position.set(0, 7.5, -1 + i * 2.4); g.add(plate); }
+    return { mesh: g, colliders: [solid(4.5, 8, 12, 5, 0, 1.5)] };
   },
 });
 

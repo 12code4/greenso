@@ -204,21 +204,20 @@ The M2 Backyard keeps its ideas (the Green Sea of grass, the gnome, the birdbath
 
 ## 5. Between floors — routes, climbs, loading
 
-Rule 6: free travel once found; big climbs; the loading transition fires at a height or area trigger. Each floor pair has a **main route** (found in that floor's first mission), a **secret route** (found by exploring), and where it makes sense a **down express**.
+Rule 6: free travel once found; big climbs; the loading transition fires at a height or area trigger.
+
+**Trim (PM, 2026-09-04).** We were heading for 11 links; the PM flagged the bloat. The house now runs **one way up and one way down per floor pair, plus the one showpiece and the one express** — a floor has at most two links out, and a room never has two. The cut routes don't vanish; the climbs stay as **room** climbs that end on an in-floor overlook (the bookcase), and the old exits become **side-quest destinations**, not loading transitions (the garage gap, the window well). Cut: the heating duct, the fan duct, the window well as an exit, the garage gap as an exit, the chute's mid-stop on G.
 
 | Link | From → To | Kind | The climb | Found how |
 |---|---|---|---|---|
-| `L_chute_up` | B_laundry → U_landing (passes G) | chute | 54 u + 50 u inside the laundry chute, on a knotted shoelace the Greens rig; rungs are the chute's seams. Loading trigger at 46 u up; you arrive at G's hall closet chute door (a mid-stop) or continue to U. | **B main mission 1** |
-| `L_stairs_B` | B_stairs → G_hall | stairs | The kids' marble run on the basement stairs: a ramp track over 14 risers (46 u). Ride a marble down; climb the track up. | found (secret) |
-| `L_duct` | B_furnace → G_living floor register → U_hall register | duct | Crawl route inside the heating ducts. Dark, warm, echoing. Two exits. | found (secret); lit by G main 1 |
-| `L_stairs_G` | G_hall → U_landing | stairs | The main stairs: marble run continues; lamp cord and banister as alternates. 50 u. | **G main mission 1** |
-| `L_bookcase` | G_living → U_landing | climb | The vaulted living room's bookcase wall to the balcony rail: shelves as ledges (11 u each), a curtain rope, 96 u of climb. The campaign's showpiece ascent. | found (hard) |
-| `L_dogdoor` | G_mudroom ↔ Y_back | door | Flap; both ways; the dog uses it too (hazard). | **G main mission 2** |
-| `L_garage` | G_garage ↔ Y_drive | gap | Under the garage door. | found |
-| `L_well` | B_well ↔ Y_side | window | Window well, late shortcut. | found (late) |
-| `L_ladder` | U_hall → A_hatch | ladder | The pull-down attic ladder: 12 rungs at 4.4 u, climbable with the kid's shoelace loops; the hatch trigger at 44 u. | **U main mission 1** |
-| `L_fan` | U_bath → A_fan | duct | Up the exhaust fan duct: a vertical crawl with the fan blades as a timing hazard. | found (secret) |
-| `L_chute_down` | U_landing → B_laundry | express | Jump in. Ten seconds of dark, a thump onto the socks. | once `L_chute_up` is found |
+| `L_chute` (was `L_chute_up`) | B_laundry → U_landing | chute | 54 u + 50 u inside the laundry chute on the Greens' knotted lace; the rungs are the chute's seams. **No stop on G** — it passes straight through the back-hall shaft (which is set dressing on G until B and U exist). | **B main mission 1** |
+| `L_bstairs` | G_vestibule ↔ B_stairs | stairs | The basement stairs. The one way down from the ground floor. | **found** (the BASEMENT door) |
+| `L_stairs_G` | G_hall → U_landing | stairs | The main stairs: the kids' marble run, bridged. 46 u. The one way up from the ground floor. | **G main mission 1** |
+| `L_dogdoor` | G_mudroom ↔ Y_back | door | The dog door flap; both ways; the dog uses it too (hazard). The one way to the yard. | **G main mission 2** |
+| `L_ladder` | U_hall → A_hatch | ladder | The pull-down attic ladder: 12 rungs at 4.4 u on the kid's shoelace loops; hatch trigger at 44 u. The one way up from the upper floor. | **U main mission 1** |
+| `L_chute_down` | U_landing → B_laundry | express | Jump in. Ten seconds of dark, a thump onto the socks. The one express, top to bottom. | once `L_chute` is found |
+
+**In-floor climbs that used to be links** (now end on an overlook inside the same floor, no loading): the vaulted living room's **bookcase wall** to the balcony rail (the showpiece ascent, 96 u); the garage and the window well stay explorable as side-quest spots.
 
 **Loading transition.** A trigger volume at each link's far end. Entering it fades to the **toy bin card** (stencil label of the destination floor, a line of Olive), tears the current floor down, builds the target floor's `MapDef`, places you at the link's arrival spawn, applies the re-occupation rule (§7), fades in. Under 2 s on the target machine. Height triggers (e.g., 46 u up the chute) work exactly like area triggers: they are volumes.
 

@@ -69,6 +69,9 @@ export class InteractSystem {
       this.hooks.sfx('unglue', it.pos);
       this.hooks.onSabotage(it.def.id, this.sabotaged, this.sabotageTotal);
     } else if (it.def.kind === 'launch') {
+      it.done = false; // reusable: a launch pad can be pressed again
+      it.progress = 0;
+      it.ring.visible = true;
       this.hooks.onLaunch(v3(it.def.to), it.def.flightTime ?? 1.8);
     } else if (it.def.kind === 'warp') {
       it.done = false; // reusable

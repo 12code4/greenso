@@ -275,6 +275,18 @@ const props: PropInstance[] = [
   P('book_hard', [110, 3.3, 64], 0.4, { variant: 1 }), P('book_hard', [120, 6.6, 59], -0.3, { variant: 5 }), P('sock', [126, 9.9, 55], 0, { variant: 4 }), P('box_juice', [116, 0, 30], 0.6),
   // garage
   P('can_lying', [120, 0, -80], 1.4, { variant: 1 }), P('sock', [70, 0, -30], 0, { variant: 0 }), P('note_paper', [137.4, 12, -20], Math.PI / 2, { variant: 7 }),
+  // ---- Toys & charm (the kids live here — the BOXED story)
+  P('teddy_bear', [-50, 0, 20], 0.6), // living room, slumped by the west bookcase
+  P('board_game', [34, 0, 24], 0.3), // mid-game on the living-room floor
+  P('lava_lamp', [6, 8, -10]), // on the coffee table, a warm glow
+  P('toy_blocks', [-8, 0, 42], 0.4), // living-room floor
+  P('toy_dino', [40, 0, 45], -1.2), // living-room floor
+  P('toy_blocks', [-69, 0, 38], -0.3), // dining, by the fort chair (secret 16)
+  P('board_game', [-99, 0, 4]), // dining, under the table
+  P('teddy_bear', [-52, 0, 103], 2.5), // hall, by the hall table
+  P('toy_dino', [30, 0, 100], 1.8), // hall
+  P('toy_blocks', [-40, 0, -95], 0.2), // mudroom, by the dog bed
+  P('toy_dino', [110, 0, 2], 0.5), // garage, by the bikes
 ];
 
 // ---------------------------------------------------------------- regions
@@ -464,7 +476,7 @@ export const FLOOR_G: MapDef = {
     { kind: 'marble', id: 'marble_fridge', at: [-63, 33.2, -104] },
     { kind: 'marble', id: 'marble_drawer', at: [-118, 11.2, -56] },
     { kind: 'marble', id: 'marble_china', at: [-134, 37.2, 20] },
-    { kind: 'marble', id: 'marble_drain', at: [128, 0.2, -20] },
+    { kind: 'marble', id: 'marble_drain', at: [128, 0.2, -12] }, // under the bike's crank, between the wheels
     { kind: 'marble', id: 'marble_sink', at: [83, 15.3, 14] },
     { kind: 'ammo', at: [-92, 16.7, -64] }, { kind: 'ammo', at: [-60, 14.2, 105] }, { kind: 'ammo', at: [130, 0, -46] }, { kind: 'ammo', at: [12, 8.2, -10] },
     { kind: 'glue', at: [-24, 6.9, -46] }, { kind: 'glue', at: [70, 0, 15] }, { kind: 'glue', at: [116, 0, 60] },
@@ -484,10 +496,10 @@ export const FLOOR_G: MapDef = {
     { id: 'warp_vacuum', kind: 'warp', at: [82, 0, 54], to: [0, 52.2, 62], prompt: 'HOLD E — INTO THE HOSE' },
   ],
   links: [
-    { id: 'L_chute_up', kind: 'chute', name: 'the laundry chute', min: [55, 42, -50], max: [61, 50, -44], to: { map: 'u', spawn: [0, 0, 60], yaw: Math.PI } },
+    // The laundry chute is set dressing here (the arrival shaft, the Greens' knotted lace); it becomes the real
+    // B↔U express when those floors exist. On the ground floor the ONLY way up is the stairs (the trim, 2026-09-04).
     { id: 'L_stairs_G', kind: 'stairs', name: 'the stairs', min: [95, 44, 10.4], max: [139, 52, 12], to: { map: 'u', spawn: [115, 0, 10], yaw: Math.PI }, foundBy: 'g1' },
     { id: 'L_dogdoor', kind: 'door', name: 'the dog door', min: [-28, 0, -114], max: [-20, 6, -109], to: { map: 'y', spawn: [-24, 0, -118], yaw: Math.PI }, foundBy: 'g2' },
-    { id: 'L_garage', kind: 'gap', name: 'under the garage door', min: [70, 0, -114], max: [130, 3, -110], to: { map: 'y', spawn: [100, 0, -118], yaw: Math.PI } },
     { id: 'L_bstairs', kind: 'door', name: 'the basement stairs', min: [2, 0, -40], max: [15, 37, -33], to: { map: 'b', spawn: [8, 0, 0], yaw: 0 } },
   ],
   missions: [
