@@ -113,7 +113,7 @@ const props: PropInstance[] = [
   P('desk_kid', [-58, 0, -98], Math.PI, { size: [34, 14, 20] }),
   P('pc_beige', [-58, 14, -100], Math.PI),
   P('ramp_plank', [-58, 0, -78], 0, { size: [3, 14, 20] }), // the binder ramp onto the desk
-  P('ramp_plank', [-62, 14, -98], Math.PI / 2, { size: [3, 20, 26], variant: 1 }), // along the desk top → the loft deck (34)
+  P('ramp_plank', [-62, 14, -90], Math.PI / 2, { size: [3, 20, 26], variant: 1 }), // desk top → the loft deck (34), through the rail's gap
   P('console_tv', [-120, 0, -40], 0),
   P('rc_track', [-78, 0, -48], 0, { size: [44, 3, 26] }),
   P('shelf_figures', [-41, 26, -60], Math.PI / 2, { size: [30, 3, 8] }),
@@ -258,9 +258,9 @@ export const FLOOR_U: MapDef = {
     { id: 'RT_landing', class: 'main', points: [[55, 0, 60], [0, 0, 60], [-40, 0, 60], [-56, 0, 59], [-70, 0, 59]] },
     { id: 'RT_parents', class: 'main', points: [[100, 0, -20], [100, 0, -36], [60, 0, -36], [30, 0, -50], [30, 0, -92]] },
     { id: 'RT_bed', class: 'climb', points: [[25, 0, -70], [32, 4, -70], [40, 8, -70], [47, 11, -70], [80, 11, -70]] },
-    { id: 'RT_bath', class: 'main', points: [[16, 0, -36], [0, 0, -52], [0, 0, -72], [10, 0, -82], [4, 3, -82], [-1, 7, -82], [-4.5, 11, -82]] },
-    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-50, 0, -70], [-58, 0, -70], [-58, 4, -76], [-58, 9, -82], [-58, 14, -92]] },
-    { id: 'RT_loft', class: 'climb', points: [[-50, 14, -98], [-58, 17, -98], [-66, 25, -98], [-74, 33, -98], [-90, 34, -98]] },
+    { id: 'RT_bath', class: 'main', points: [[16, 0, -36], [0, 0, -52], [0, 0, -72], [10, 0.7, -82], [5, 4.1, -82], [0, 7.6, -82], [-4.5, 10.7, -82]] },
+    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-52, 0, -64], [-58, 0, -66], [-58, 4.2, -74], [-58, 8.4, -80], [-58, 12.6, -86], [-58, 14, -95]] },
+    { id: 'RT_loft', class: 'climb', points: [[-50, 14.8, -90], [-58, 20.9, -90], [-66, 27.1, -90], [-74, 33.2, -90], [-90, 34, -90]] },
     { id: 'RT_pip', class: 'main', points: [[-99, 0, -20], [-99, 0, 20], [-104, 0, 20], [-108, 0, 20], [-112, 0, 20]] },
     { id: 'RT_hall', class: 'main', points: [[-130, 0, 100], [-60, 0, 100], [0, 0, 100], [60, 0, 100], [130, 0, 100]] },
     { id: 'RT_linen', class: 'flank', points: [[114, 0, 70], [114, 0, 76], [114, 0, 82]] },

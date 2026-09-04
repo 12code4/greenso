@@ -40,14 +40,20 @@ reg({
     quilt.position.z = d * 0.15; g.add(quilt);
     const pillow = boxMesh(w * 0.4, 3, 10, mat('FABRIC_SOFT', WHITE), h + 5.5);
     pillow.position.set(0, h + 5.5, -d / 2 + 7); g.add(pillow);
-    // Guard rail on the +x side
+    // Guard rail on the +x side, with a gap amidships where the climb arrives (the kid took a
+    // spindle out; without the gap the rail walls off the only way onto the deck).
+    const GAP = 7;
     for (let i = 0; i <= 6; i++) {
+      const z = -d / 2 + 3 + i * ((d - 6) / 6);
+      if (Math.abs(z) < GAP / 2) continue;
       const spindle = boxMesh(1, 8, 1, frame, h + 6);
-      spindle.position.set(w / 2 - 1.6, h + 6, -d / 2 + 3 + i * ((d - 6) / 6));
+      spindle.position.set(w / 2 - 1.6, h + 6, z);
       g.add(spindle);
     }
     g.add(boxMesh(1.6, 1.6, d, frame, h + 10).translateX(w / 2 - 1.6));
-    colliders.push(solid(1.6, 10, d, h + 5, w / 2 - 1.6));
+    const segD = (d - GAP) / 2;
+    colliders.push(solid(1.6, 10, segD, h + 5, w / 2 - 1.6, -d / 2 + segD / 2));
+    colliders.push(solid(1.6, 10, segD, h + 5, w / 2 - 1.6, d / 2 - segD / 2));
     // A ladder on the −x end (decorative: the real way up is the desk, per the blueprint)
     for (let i = 1; i <= 8; i++) {
       const rung = cylMesh(0.4, 10, mat('WOOD_WARM', WALNUT), 0, 8);
