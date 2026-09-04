@@ -32,6 +32,6 @@ Campaign order is fiction; **build order** (bible, re-affirmed post-audit): Back
 | 7 | The Workbench | `map-07-workbench.md` | ready for P1 |
 | 8 | The Picnic Table | `map-08-picnic.md` | ready for P1 |
 | G | **The Ground Floor** (house) | `floor-G.md` | **built** — `src/maps/defs/house/g.ts`; P1–P5 passing (`walk.mjs g` 13 routes, `house-g.mjs` 21/21); §11 logs the as-built deviations |
-| U | **The Upper Floor** (house) | `floor-U.md` | **P0 done** — the kids' world, built around the living room's vault void; awaiting P1 |
+| U | **The Upper Floor** (house) | `floor-U.md` | **P1 built** — `src/maps/defs/house/u.ts`, `?map=u`; walk gate green (11 routes, none failed). P2–P5 (population, missions, hazards, audio) still to come; §11 logs the as-built |
 
 All dimensions are canonical units (real cm ÷ 5.4, docs/06 §1) and all maps passed the real-footprint sanity check at P0.

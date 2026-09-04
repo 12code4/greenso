@@ -194,6 +194,18 @@ Completing `u1` opens `L_ladder` (`foundBy: 'u1'`, matching the G convention tha
 - **Turbo** (`?test&turbo`) and the free-cam photo tour work unchanged.
 - **Gates to add**: `tools/walk.mjs u` (11 routes above) and `tools/house-u.mjs` (U1 flow, U2 flow, the void kill-plane, the dollhouse interior, secrets 29/30/35).
 
-## 11. As built — deviations from the contract
+## 11. As built — deviations from the contract (2026-09-04, P1)
 
-*(Filled during P1–P5, like floor G's §11. Empty until construction starts.)*
+- **The runtime learned about holes.** Collision had a hard-coded ground plane at y 0, so a floor with a hole in it was impossible. `ShellDef.holes` now lists rectangles where that plane does not exist (`CollisionWorld.addHole`/`inHole`), a map with holes draws **no base floor mesh** (every walkable rectangle is an explicit ground zone instead), and `MapDef.killY` catches a fall and returns you to the region checkpoint with a line from Olive. The void and the stairwell are the two holes.
+- **The void is walled on three sides, railed on one.** The contract drew a rail around the whole perimeter; in practice Pip's room, the stair head and the north row need *walls* there, not open drops. So the void's north, west and east faces are the rooms' walls, and only the landing (z 49..69) opens onto it, behind a `rail`. The stairwell keeps rails on its west and south edges.
+- **The living room is painted 46 u below the rail** — its hardwood, rug, couch, coffee table, fireplace and bookcase wall as flat masses. The floor below is a different map, so leaning over the rail had shown pure black; this is a backdrop, and `killY` (−30) catches the player long before they reach it.
+- **The ceiling covers the void too**, because the living room's vault ceiling and this floor's ceiling are the same plane (96 = 50 + 46). The skylight comes through at x −15..15, z −5..25, and it is what lights the landing.
+- **Room sizes shifted** to fit the ring: `U_parents` is 118 × 80 (not 100 × 90), `U_pip` is 80 × 100, `U_jonah` 100 × 80, `U_bath` 60 × 80. The stair head (`U_stairs`) became its own connector region, x 61..139, z −31..69, and the arrival is (115, 0, 24) — floor G's `L_stairs_G` was moved to match, because the contract's (115, 0, 10) is inside the stairwell hole.
+- **Two climb rules the gate taught us**, both now house-wide:
+  1. **A climb must land on something solid.** A ramp that ends on a thin slab with open air beneath it surfaces the player *inside* the slab, and the resolver ejects them downward. Jonah's desk got a solid drawer pedestal to land on, exactly like the kitchen counter on floor G.
+  2. **A climb prop must not sit across another climb's landing.** The loft ramp lies on the desktop; the binder ramp now arrives at the desk's *east* end, clear of it. Overlapping climbs in one small room is the trap.
+- **The desk's keyboard tray is visual only.** As a collider it caught anyone who dropped through the desktop and pinned them under it with 2 u of head room — a perfect trap.
+- **The loft bed's guard rail has a gap amidships** where the ramp arrives; without it the rail walls off the only way onto the deck.
+- **`L_fan` is gone** (the trim): the bathroom's exhaust fan is flavour and a hazard, not a floor link. This floor has three links — the stairs down, the attic ladder, and the chute express.
+- **P1 gate:** `node tools/walk.mjs u` — 11 routes, none failed, camera sweep clean.
+- **Not yet built (P2–P5):** encounters, patrols, pockets, the four hazards, both missions, the side quests, and the secrets' interactions. The linen-closet shelves are not yet climbable (they need a prop, so `RT_linen` reaches the closet mouth only).
