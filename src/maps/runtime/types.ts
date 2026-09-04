@@ -218,6 +218,10 @@ export interface ShellDef {
   masses: { kind: 'fence' | 'siding' | 'mass' | 'wall' | 'ceiling' | 'slab' | 'glass'; min: Vec3; max: Vec3; color?: number }[];
   /** Invisible bounds. */
   bounds: { min: Vec3; max: Vec3 };
+  /** Rectangles with no floor: stairwells, and the upper floor's well over the vaulted living room.
+   *  They suppress the implicit ground plane and the base floor mesh; fall in and you keep falling
+   *  until the map's `killY` catches you. Ground zones must be laid to avoid them. */
+  holes?: { min: Vec3; max: Vec3 }[];
 }
 
 export interface MapDef {
@@ -241,6 +245,8 @@ export interface MapDef {
   links?: FloorLinkDef[];
   /** Sky-less interiors: skip the dome and use the fog colour as the backdrop. */
   indoor?: boolean;
+  /** Y below which a fall is caught and respawned at the region checkpoint (maps with holes). */
+  killY?: number;
   platforms?: PlatformDef[];
   aircraft?: AircraftWave[];
   mission?: MissionDef;

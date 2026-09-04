@@ -169,13 +169,19 @@ export function buildShell(def: ShellDef, scene: THREE.Scene, world: CollisionWo
   scene.add(sun.target);
   scene.add(new THREE.HemisphereLight(def.hemi.sky, def.hemi.ground, def.hemi.intensity));
 
-  // Base ground plane
-  const gtex = groundTexture(baseGround);
-  gtex.repeat.set(baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40, baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ map: gtex, roughness: 0.9 }));
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
+  // Floor holes: no implicit ground plane over them (the upper floor's well over the vault).
+  for (const h of def.holes ?? []) world.addHole(v3(h.min), v3(h.max));
+
+  // Base ground plane. A map with holes draws no base plane at all — every walkable rectangle
+  // is an explicit ground zone, so the holes read as holes instead of as painted floor.
+  if (!def.holes?.length) {
+    const gtex = groundTexture(baseGround);
+    gtex.repeat.set(baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40, baseGround === 'planks' || baseGround === 'hardwood' ? 16 : 40);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ map: gtex, roughness: 0.9 }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+  }
 
   // Ground zones (slabs)
   for (const z of def.ground) {

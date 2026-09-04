@@ -25,6 +25,18 @@ const EPS = 1e-6;
 
 export class CollisionWorld {
   boxes: StaticBox[] = [];
+  /** Rectangles (x/z) where the implicit ground plane does NOT exist: stairwells, and the
+   *  upper floor's open well over the vaulted living room. Fall through and keep falling. */
+  holes: { minX: number; maxX: number; minZ: number; maxZ: number }[] = [];
+
+  addHole(min: THREE.Vector3, max: THREE.Vector3): void {
+    this.holes.push({ minX: min.x, maxX: max.x, minZ: min.z, maxZ: max.z });
+  }
+
+  inHole(x: number, z: number): boolean {
+    for (const h of this.holes) if (x > h.minX && x < h.maxX && z > h.minZ && z < h.maxZ) return true;
+    return false;
+  }
 
   addBox(center: THREE.Vector3, size: THREE.Vector3): StaticBox {
     const half = size.clone().multiplyScalar(0.5);
@@ -50,8 +62,8 @@ export class CollisionWorld {
   ): CapsuleResult {
     const res: CapsuleResult = { grounded: false, hitCeiling: false, hitWall: false };
 
-    // Ground plane
-    if (pos.y < 0) {
+    // Ground plane (absent over a hole)
+    if (pos.y < 0 && !this.inHole(pos.x, pos.z)) {
       pos.y = 0;
       res.grounded = true;
     }

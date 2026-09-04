@@ -524,7 +524,7 @@ export const FLOOR_G: MapDef = {
   links: [
     // The laundry chute is set dressing here (the arrival shaft, the Greens' knotted lace); it becomes the real
     // B↔U express when those floors exist. On the ground floor the ONLY way up is the stairs (the trim, 2026-09-04).
-    { id: 'L_stairs_G', kind: 'stairs', name: 'the stairs', min: [95, 44, 10.4], max: [139, 52, 12], to: { map: 'u', spawn: [115, 0, 10], yaw: Math.PI }, foundBy: 'g1' },
+    { id: 'L_stairs_G', kind: 'stairs', name: 'the stairs', min: [95, 44, 10.4], max: [139, 52, 12], to: { map: 'u', spawn: [115, 0, 24], yaw: Math.PI }, foundBy: 'g1' },
     { id: 'L_dogdoor', kind: 'door', name: 'the dog door', min: [-28, 0, -114], max: [-20, 6, -109], to: { map: 'y', spawn: [-24, 0, -118], yaw: Math.PI }, foundBy: 'g2' },
     { id: 'L_bstairs', kind: 'door', name: 'the basement stairs', min: [2, 0, -40], max: [15, 37, -33], to: { map: 'b', spawn: [8, 0, 0], yaw: 0 } },
   ],

@@ -587,6 +587,13 @@ function simulate(rawDt: number): void {
 
     if (player.alive && !free) {
       player.update(dt, input, cam.yaw, aiming, world);
+      // Fell down the well over the living room. The floor below is a different map, so this is a
+      // catch-and-return, never a floor change.
+      if (mapDef.killY !== undefined && player.pos.y < mapDef.killY) {
+        player.respawnAt(map.regions.checkpoint);
+        hud.setMelt(1);
+        hud.radio('LT. OLIVE', 'You went over the rail. The first floor is a separate war, Sergeant — I had them throw you back.', 5);
+      }
       if (player.landed) audio.play('clack', player.pos, 0.6);
       weapons.update(dt, input, cam, aiming, hittables);
       // Dive-tackle: sprint + C into a Tan topples the molded ones, shoves the rest
