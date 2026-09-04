@@ -112,7 +112,7 @@ const props: PropInstance[] = [
   P('bed_loft', [-105, 0, -90], 0, { size: [60, 30, 36] }),
   P('desk_kid', [-58, 0, -98], Math.PI, { size: [34, 14, 20] }),
   P('pc_beige', [-66, 14, -101], Math.PI),
-  P('ramp_plank', [-58, 0, -78], 0, { size: [3, 14, 20] }), // the binder ramp onto the desk
+  P('ramp_plank', [-58, 0, -80], 0, { size: [3, 14, 20] }), // the binder ramp; its top overlaps the desk so the step across is seamless
   P('ramp_plank', [-64, 14, -90], Math.PI / 2, { size: [3, 20, 30], variant: 1 }), // desk top → onto the mattress (34), through the rail's gap
   P('console_tv', [-120, 0, -40], 0),
   P('rc_track', [-78, 0, -48], 0, { size: [44, 3, 26] }),
@@ -259,7 +259,7 @@ export const FLOOR_U: MapDef = {
     { id: 'RT_parents', class: 'main', points: [[100, 0, -20], [100, 0, -36], [60, 0, -36], [30, 0, -50], [30, 0, -92]] },
     { id: 'RT_bed', class: 'climb', points: [[25, 0, -70], [32, 4, -70], [40, 8, -70], [47, 11, -70], [80, 11, -70]] },
     { id: 'RT_bath', class: 'main', points: [[16, 0, -36], [0, 0, -52], [0, 0, -72], [10, 0.7, -82], [5, 4.1, -82], [0, 7.6, -82], [-4.5, 10.7, -82]] },
-    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-52, 0, -64], [-58, 0, -66], [-58, 4.2, -74], [-58, 8.4, -80], [-58, 12.6, -86], [-58, 14, -91]] },
+    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-52, 0, -64], [-58, 0, -68], [-58, 4.2, -76], [-58, 8.4, -82], [-58, 12.6, -88], [-52, 14, -93]] },
     { id: 'RT_loft', class: 'climb', points: [[-50, 14.7, -90], [-58, 20, -90], [-66, 25.3, -90], [-74, 30.7, -90], [-90, 34, -90]] },
     { id: 'RT_pip', class: 'main', points: [[-99, 0, -20], [-99, 0, 20], [-104, 0, 20], [-108, 0, 20], [-112, 0, 20]] },
     { id: 'RT_hall', class: 'main', points: [[-130, 0, 100], [-60, 0, 100], [0, 0, 100], [60, 0, 100], [130, 0, 100]] },
