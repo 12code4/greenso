@@ -315,11 +315,13 @@ reg({
       g.add(boxMesh(1.4, h, d, shell, h / 2).translateX(x));
       colliders.push(solid(1.4, h, d, h / 2, x));
     }
-    // Floor slabs (the ground floor is the base)
+    // Floor slabs. The ground floor is nearly flush so you can walk in off the carpet
+    // (a 1 u lip at the front door would need a jump).
     for (let f = 0; f <= 3; f++) {
       const y = f * storey;
-      g.add(boxMesh(w - 2.8, 1, d - 1.4, shell, y + 0.5));
-      colliders.push(solid(w - 2.8, 1, d - 1.4, y + 0.5, 0, -0.7));
+      const th = f === 0 ? 0.3 : 1;
+      g.add(boxMesh(w - 2.8, th, d - 1.4, shell, y + th / 2));
+      colliders.push(solid(w - 2.8, th, d - 1.4, y + th / 2, 0, -0.7));
     }
     // The staircases: one per storey, zig-zagging, risers 0.25 (walkable), treads 0.5
     for (let f = 0; f < 3; f++) {

@@ -113,9 +113,9 @@ const props: PropInstance[] = [
   P('desk_kid', [-58, 0, -98], Math.PI, { size: [34, 14, 20] }),
   P('pc_beige', [-58, 14, -100], Math.PI),
   P('ramp_plank', [-58, 0, -78], 0, { size: [3, 14, 20] }), // the binder ramp onto the desk
-  P('ramp_plank', [-80, 14, -90], Math.PI / 2, { size: [3, 16, 22], variant: 1 }), // desk → the loft deck
+  P('ramp_plank', [-62, 14, -98], Math.PI / 2, { size: [3, 20, 26], variant: 1 }), // along the desk top → the loft deck (34)
   P('console_tv', [-120, 0, -40], 0),
-  P('rc_track', [-70, 0, -55], 0, { size: [52, 3, 34] }),
+  P('rc_track', [-78, 0, -48], 0, { size: [44, 3, 26] }),
   P('shelf_figures', [-41, 26, -60], Math.PI / 2, { size: [30, 3, 8] }),
   P('bookcase', [-136, 0, -60], -Math.PI / 2, { size: [29.6, 37, 6] }),
   P('toy_blocks', [-50, 0, -40], 0.3), P('toy_dino', [-90, 0, -36], 1.2),
@@ -130,8 +130,8 @@ const props: PropInstance[] = [
   // ---- The bathroom
   P('tub', [-18, 0, -82], 0, { size: [30, 11, 50] }),
   P('ramp_plank', [3, 0, -82], Math.PI / 2, { size: [3, 11, 16], variant: 2 }), // the board onto the rim
-  P('vanity', [6, 0, -100], Math.PI, { size: [24, 16, 12] }),
-  P('toilet_full', [10, 0, -60], Math.PI / 2),
+  P('vanity', [10, 0, -100], Math.PI, { size: [20, 16, 12] }),
+  P('toilet_full', [12, 0, -45], 0),
   P('fan_vent', [-9, 46, -88], 0),
   P('duck_rubber', [-18, 11.4, -70], 0.4), P('duck_rubber', [-18, 11.4, -64], 2.1, { variant: 1 }),
   P('duck_rubber', [-24, 2.2, -80], 0.9), P('duck_rubber', [-12, 2.2, -90], 1.7, { variant: 1 }),
@@ -187,15 +187,15 @@ const props: PropInstance[] = [
 
   // ---- The hall
   P('attic_hatch', [0, 46, 90], 0, { size: [26, 4, 46] }),
-  P('linen_shelves', [114, 0, 85], Math.PI, { size: [28, 46, 20] }),
+  P('linen_shelves', [114, 0, 90], Math.PI, { size: [28, 46, 12] }),
   P('hall_table', [-60, 0, 106], Math.PI),
   P('plant_floor', [-100, 0, 104], 0),
   P('photo_frame', [-30, 30, 109.5], 0), P('photo_frame', [-15, 32, 109.5], 0, { variant: 1 }),
   P('photo_frame', [30, 31, 109.5], 0, { variant: 2 }),
   P('clock_wall', [60, 34, 109.5], 0),
-  P('teddy_bear', [-84, 0, 100], 1.1, { variant: 2 }),
+  P('teddy_bear', [-84, 0, 105], 1.1, { variant: 2 }),
   P('sock', [20, 0, 96], 0, { variant: 2 }), P('sock', [-40, 0, 78], 0, { variant: 0 }),
-  P('shoe_pair', [-120, 0, 100], 0.4, { variant: 1 }),
+  P('shoe_pair', [-120, 0, 105], 0.4, { variant: 1 }),
   P('note_paper', [-64, 14.2, 106], 0, { variant: 2 }),
   P('outlet', [-80, 5.5, 109], 0), P('outlet', [90, 5.5, 109], 0, { variant: 1 }),
   P('light_switch', [-92, 22, 70.6], Math.PI),
@@ -256,14 +256,14 @@ export const FLOOR_U: MapDef = {
   routes: [
     { id: 'RT_arrival', class: 'main', points: [[115, 0, 24], [100, 0, 45], [70, 0, 62], [0, 0, 80], [0, 0, 100]] },
     { id: 'RT_landing', class: 'main', points: [[55, 0, 60], [0, 0, 60], [-40, 0, 60], [-56, 0, 59], [-70, 0, 59]] },
-    { id: 'RT_parents', class: 'main', points: [[100, 0, -20], [100, 0, -45], [60, 0, -55], [30, 0, -60], [30, 0, -95]] },
+    { id: 'RT_parents', class: 'main', points: [[100, 0, -20], [100, 0, -36], [60, 0, -36], [30, 0, -50], [30, 0, -92]] },
     { id: 'RT_bed', class: 'climb', points: [[25, 0, -70], [32, 4, -70], [40, 8, -70], [47, 11, -70], [80, 11, -70]] },
-    { id: 'RT_bath', class: 'main', points: [[16, 0, -45], [10, 0, -70], [10, 0, -82], [6, 3, -82], [0, 7, -82], [-4, 11, -82]] },
-    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -60], [-58, 0, -66], [-58, 5, -74], [-58, 10, -82], [-58, 14, -90]] },
-    { id: 'RT_loft', class: 'climb', points: [[-58, 14, -92], [-70, 14, -90], [-78, 18, -90], [-86, 25, -90], [-95, 30, -90]] },
-    { id: 'RT_pip', class: 'main', points: [[-99, 0, -20], [-99, 0, 20], [-104, 0, 19], [-110, 0, 19], [-118, 0, 19]] },
-    { id: 'RT_hall', class: 'main', points: [[-130, 0, 90], [-60, 0, 90], [0, 0, 90], [60, 0, 90], [130, 0, 90]] },
-    { id: 'RT_linen', class: 'flank', points: [[100, 0, 72], [108, 0, 78], [114, 0, 84]] },
+    { id: 'RT_bath', class: 'main', points: [[16, 0, -36], [0, 0, -52], [0, 0, -72], [10, 0, -82], [4, 3, -82], [-1, 7, -82], [-4.5, 11, -82]] },
+    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-50, 0, -70], [-58, 0, -70], [-58, 4, -76], [-58, 9, -82], [-58, 14, -92]] },
+    { id: 'RT_loft', class: 'climb', points: [[-50, 14, -98], [-58, 17, -98], [-66, 25, -98], [-74, 33, -98], [-90, 34, -98]] },
+    { id: 'RT_pip', class: 'main', points: [[-99, 0, -20], [-99, 0, 20], [-104, 0, 20], [-108, 0, 20], [-112, 0, 20]] },
+    { id: 'RT_hall', class: 'main', points: [[-130, 0, 100], [-60, 0, 100], [0, 0, 100], [60, 0, 100], [130, 0, 100]] },
+    { id: 'RT_linen', class: 'flank', points: [[114, 0, 70], [114, 0, 76], [114, 0, 82]] },
     { id: 'RT_hatch', class: 'setpiece', points: [[0, 0, 90], [0, 20, 90], [0, 44, 90]] },
   ],
   // The plush pile is a hush pocket: pure concealment, no blades.
