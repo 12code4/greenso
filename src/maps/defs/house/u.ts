@@ -112,7 +112,7 @@ const props: PropInstance[] = [
   P('bed_loft', [-105, 0, -90], 0, { size: [60, 30, 36] }),
   P('desk_kid', [-58, 0, -98], Math.PI, { size: [34, 14, 20] }),
   P('pc_beige', [-66, 14, -101], Math.PI),
-  P('ramp_plank', [-70, 0, -78], 0, { size: [3, 14, 20] }), // the binder ramp, landing on the desk's SOLID drawer pedestal (x −75..−65)
+  P('ramp_plank', [-46, 0, -78], 0, { size: [3, 14, 20] }), // the binder ramp onto the desk's SOLID pedestal (x −51..−41), east of and clear of the loft ramp above
   P('ramp_plank', [-64, 14, -90], Math.PI / 2, { size: [3, 20, 30], variant: 1 }), // desk top → onto the mattress (34), through the rail's gap
   P('console_tv', [-120, 0, -40], 0),
   P('rc_track', [-78, 0, -48], 0, { size: [44, 3, 26] }),
@@ -120,7 +120,7 @@ const props: PropInstance[] = [
   P('bookcase', [-136, 0, -60], -Math.PI / 2, { size: [29.6, 37, 6] }),
   P('toy_blocks', [-50, 0, -40], 0.3), P('toy_dino', [-90, 0, -36], 1.2),
   P('sock', [-64, 0, -50], 0, { variant: 1 }), P('sock', [-110, 0, -45], 0, { variant: 3 }),
-  P('book_hard', [-52, 0, -70], 0.4, { variant: 2 }), P('magazine_stack', [-46, 0, -85]),
+  P('book_hard', [-52, 0, -70], 0.4, { variant: 2 }), P('magazine_stack', [-54, 0, -76]),
   P('drawing_taped', [-41.5, 30, -45], Math.PI / 2, { variant: 1 }),
   P('outlet', [-41, 5.5, -80], Math.PI / 2), P('light_switch', [-41, 22, -66], Math.PI / 2),
   P('floor_register', [-120, 0, -106], 0),
@@ -259,7 +259,7 @@ export const FLOOR_U: MapDef = {
     { id: 'RT_parents', class: 'main', points: [[100, 0, -20], [100, 0, -36], [60, 0, -36], [30, 0, -50], [30, 0, -92]] },
     { id: 'RT_bed', class: 'climb', points: [[25, 0, -70], [32, 4, -70], [40, 8, -70], [47, 11, -70], [80, 11, -70]] },
     { id: 'RT_bath', class: 'main', points: [[16, 0, -36], [0, 0, -52], [0, 0, -72], [10, 0.7, -82], [5, 4.1, -82], [0, 7.6, -82], [-4.5, 10.7, -82]] },
-    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-56, 0, -62], [-70, 0, -66], [-70, 2.8, -72], [-70, 7, -78], [-70, 11.2, -84], [-70, 13.3, -87], [-70, 14, -92], [-50, 14, -95]] }, // up the pedestal, then east along the desktop
+    { id: 'RT_jonah', class: 'main', points: [[-45, 0, -50], [-46, 0, -62], [-46, 0, -66], [-46, 2.8, -72], [-46, 7, -78], [-46, 11.2, -84], [-46, 13.3, -87], [-46, 14, -92], [-52, 14, -96]] }, // up the pedestal, which sits east of the loft ramp
     { id: 'RT_loft', class: 'climb', points: [[-50, 14.7, -90], [-58, 20, -90], [-66, 25.3, -90], [-74, 30.7, -90], [-90, 34, -90]] },
     { id: 'RT_pip', class: 'main', points: [[-99, 0, -20], [-99, 0, 20], [-104, 0, 20], [-108, 0, 20], [-112, 0, 20]] },
     { id: 'RT_hall', class: 'main', points: [[-130, 0, 100], [-60, 0, 100], [0, 0, 100], [60, 0, 100], [130, 0, 100]] },
