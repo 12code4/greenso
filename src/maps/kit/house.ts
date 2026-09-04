@@ -648,12 +648,14 @@ reg({
     // Stone ledges out of the left cheek's outer face (1.2 risers, 1.6 treads), zig-zagging front → back → front
     // so the climb stays on the cheek; the top ledge is one auto-step under the mantel. 5.2 deep, so you stand
     // clear of the mantel's underside. A "hard" climb: jumps, not steps.
-    // 1.1 risers (the bookcase hop; 0.25 u under the jump apex), 1.25 treads, 9 + 7 ledges over local z −8.5..1.5
-    // (the breast's last 1.6 u sit inside the wall behind it). One pass up the cheek, a one-tread turnaround, one pass
-    // back: a stone two hops above another leaves 1.2 u of head room (2 × 1.1 − the 1.0 slab). Top stone 20.6, mantel 21.2.
+    // 1.1 risers (the bookcase hop; 0.25 u under the jump apex), 1.25 treads, 7 + 7 + 2 stones over local z −6..1.5:
+    // the first stone is a hop up from the hearth, the breast's last 1.6 u sit inside the wall behind it. Each pass
+    // turns one tread back; a stone two hops above another leaves 1.2 u of head room (2 × 1.1 − the 1.0 slab).
+    // Top stone 20.6, mantel 21.2.
     const zs: number[] = [];
-    for (let k = 0; k < 9; k++) zs.push(-8.5 + 1.25 * k);
+    for (let k = 0; k < 7; k++) zs.push(-6 + 1.25 * k);
     for (let k = 0; k < 7; k++) zs.push(0.25 - 1.25 * k);
+    for (let k = 0; k < 2; k++) zs.push(-6 + 1.25 * k);
     let y = 3;
     for (const z of zs) {
       // 1.2 along the run (< the 1.25 tread): neighbours never overlap, so no ledge hangs 1 u over the one beside it
