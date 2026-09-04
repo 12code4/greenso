@@ -26,6 +26,7 @@ const FREE = {
     ['climb-dining-chair', -60, 16, 40, Math.atan2(-21, -18), 0.2],
     ['climb-stairs-top', 94, 40, 60, Math.atan2(6, -48), -0.1],
     ['stairwell-up', 117, 6, 85, Math.PI, -0.45],
+    ['climb-fireplace', 35, 12, 40, Math.atan2(20, -19), 0.05],
   ],
 };
 const SPOTS = {

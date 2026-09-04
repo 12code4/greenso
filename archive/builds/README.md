@@ -5,3 +5,4 @@ Every shipped single-file build is copied here as `YYYY-MM-DD-<name>.html` (PM d
 | File | Tag | What it is |
 |---|---|---|
 | `2026-09-02-backyard-slice-updates-1-4.html` | `build/2026-09-02-backyard-updates-1-4` | The M2 Backyard slice as the PM played it for the second hands-on: Updates 1–4 (FIREPOWER, TOY SOLDIERS, FAIR PLAY, HEROES & CONTENT). |
+| `2026-09-03-ground-floor.html` | `build/2026-09-03-ground-floor` | The house's ground floor, first cut: twelve rooms at honest 1:32, G1 *The Long Hall* and G2 *Open House*, patrols, pockets, floor links, fifty secrets' first three. All gates green (walk 13 routes, G1/G2, the Backyard's four). |
